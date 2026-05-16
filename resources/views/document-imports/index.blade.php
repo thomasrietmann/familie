@@ -8,7 +8,7 @@
             @forelse($documentImports as $documentImport)
                 <div class="grid gap-3 p-4 md:grid-cols-6 md:items-center">
                     <div class="md:col-span-2"><a class="font-semibold hover:underline" href="{{ route('families.document-imports.show', [$family, $documentImport]) }}">{{ $documentImport->title }}</a><p class="text-sm text-stone-500">{{ $documentImport->original_filename }}</p></div>
-                    <p class="text-sm">{{ $documentImport->file_type }}</p>
+                    <p class="text-sm">{{ $documentImport->file_type }} · {{ $documentImport->targetDisplayName() }}</p>
                     <p class="text-sm">{{ $documentImport->uploadedBy->name }}</p>
                     <p><x-badge>{{ $documentImport->status }}</x-badge></p>
                     <p class="text-sm">{{ $documentImport->suggestions_count }} Vorschläge · {{ $documentImport->created_at->format('d.m.Y') }}</p>

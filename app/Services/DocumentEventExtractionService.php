@@ -12,6 +12,8 @@ class DocumentEventExtractionService
         $children = $documentImport->family->children()->orderBy('first_name')->get();
         $firstChild = $children->first();
         $secondChild = $children->skip(1)->first();
+        $targetType = $documentImport->target_type ?? 'family';
+        $targetId = $documentImport->target_id;
 
         return [
             [
@@ -22,8 +24,8 @@ class DocumentEventExtractionService
                 'all_day' => false,
                 'location' => 'Schulhaus',
                 'category' => 'school',
-                'suggested_owner_type' => $firstChild ? 'child' : 'family',
-                'suggested_owner_id' => $firstChild?->id,
+                'suggested_owner_type' => $targetType,
+                'suggested_owner_id' => $targetId,
                 'confidence' => 0.87,
             ],
             [
@@ -34,8 +36,8 @@ class DocumentEventExtractionService
                 'all_day' => false,
                 'location' => 'Aula',
                 'category' => 'school',
-                'suggested_owner_type' => $secondChild ? 'child' : 'family',
-                'suggested_owner_id' => $secondChild?->id,
+                'suggested_owner_type' => $targetType,
+                'suggested_owner_id' => $targetId,
                 'confidence' => 0.74,
             ],
         ];

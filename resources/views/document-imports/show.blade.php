@@ -6,7 +6,7 @@
     <div class="grid gap-6 lg:grid-cols-3">
         <x-card><p class="text-sm text-stone-500">Status</p><p class="mt-2 text-xl font-semibold">{{ $documentImport->status }}</p></x-card>
         <x-card><p class="text-sm text-stone-500">Hochgeladen von</p><p class="mt-2 text-xl font-semibold">{{ $documentImport->uploadedBy->name }}</p></x-card>
-        <x-card><p class="text-sm text-stone-500">Vorschläge</p><p class="mt-2 text-xl font-semibold">{{ $documentImport->suggestions->count() }}</p></x-card>
+        <x-card><p class="text-sm text-stone-500">Für wen?</p><p class="mt-2 text-xl font-semibold">{{ $documentImport->targetDisplayName() }}</p></x-card>
     </div>
     <x-card class="mt-6">
         <h2 class="mb-4 text-lg font-semibold">Erkannte Vorschläge</h2>

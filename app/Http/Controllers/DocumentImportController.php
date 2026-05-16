@@ -22,6 +22,7 @@ class DocumentImportController extends Controller
     public function create(Family $family): View
     {
         $this->authorize('update', $family);
+        $family->load(['children', 'activeParents']);
 
         return view('document-imports.create', compact('family'));
     }
@@ -39,7 +40,7 @@ class DocumentImportController extends Controller
             'file_type' => strtolower($file->getClientOriginalExtension()),
             'status' => 'uploaded',
             'notes' => $request->validated('notes'),
-        ]);
+        ] + $request->targetData());
 
         $results = $service->extract($documentImport);
 

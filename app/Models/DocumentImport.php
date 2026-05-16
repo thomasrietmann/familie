@@ -19,6 +19,8 @@ class DocumentImport extends Model
         'original_filename',
         'file_type',
         'status',
+        'target_type',
+        'target_id',
         'raw_ai_result',
         'notes',
     ];
@@ -43,5 +45,15 @@ class DocumentImport extends Model
     public function suggestions(): HasMany
     {
         return $this->hasMany(ImportedEventSuggestion::class);
+    }
+
+    public function targetDisplayName(): string
+    {
+        return match ($this->target_type) {
+            'family' => 'Ganze Familie',
+            'user' => User::find($this->target_id)?->name ?? 'Elternteil',
+            'child' => Child::find($this->target_id)?->displayName() ?? 'Kind',
+            default => 'Ganze Familie',
+        };
     }
 }

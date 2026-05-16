@@ -60,7 +60,7 @@
     <div class="divide-y divide-stone-100">
         @forelse($family->events as $event)
             <div class="flex items-center justify-between py-3">
-                <div><p class="font-medium">{{ $event->title }}</p><p class="text-sm text-stone-600">{{ $event->starts_at->format('d.m.Y H:i') }}</p></div>
+                <div><p class="font-medium">{{ $event->title }}</p><p class="text-sm text-stone-600">{{ $event->starts_at->format('d.m.Y H:i') }} · {{ $event->ownerDisplayName() }}</p></div>
                 <x-badge>{{ $event->statusLabel() }}</x-badge>
             </div>
         @empty

@@ -61,7 +61,7 @@ Ein Login verwaltet genau eine Familie. Jede Familie hat einen Owner. Aktive Elt
 
 ## 6. Termine
 
-Manuell erfasste Termine sind Familientermine. Die frühere sichtbare Termin-Zugehörigkeit wurde aus dem MVP entfernt, damit Termine schneller und klarer erfasst werden können.
+Beim Erfassen eines Termins wird direkt gewählt, für wen der Termin ist: ganze Familie, Elternteil oder Kind. Dokument-Uploads haben dieselbe Auswahl, damit Import-Vorschläge bereits einer Familie oder Einzelperson zugeordnet werden können.
 
 ## 7. Dokument-Import Ablauf
 

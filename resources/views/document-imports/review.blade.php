@@ -30,8 +30,22 @@
                         <label class="text-sm font-medium">Kategorie</label>
                         <select class="mt-1 block w-full rounded-md border-stone-300" name="category"><option value="">Keine</option>@foreach(\App\Models\FamilyEvent::CATEGORIES as $category)<option value="{{ $category }}" @selected($suggestion->category === $category)>{{ \App\Models\FamilyEvent::CATEGORY_LABELS[$category] }}</option>@endforeach</select>
                     </div>
-                    <input type="hidden" name="owner_type" value="family">
-                    <input type="hidden" name="owner_id" value="">
+                    <div>
+                        <label class="text-sm font-medium">Für wen?</label>
+                        <select class="mt-1 block w-full rounded-md border-stone-300" name="owner_type">
+                            <option value="family" @selected($suggestion->suggested_owner_type === 'family')>Ganze Familie</option>
+                            <option value="user" @selected($suggestion->suggested_owner_type === 'user')>Elternteil</option>
+                            <option value="child" @selected($suggestion->suggested_owner_type === 'child')>Kind</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Person</label>
+                        <select class="mt-1 block w-full rounded-md border-stone-300" name="owner_id">
+                            <option value="">Ganze Familie / keine Person</option>
+                            @foreach($family->activeParents as $parent)<option value="{{ $parent->id }}" @selected($suggestion->suggested_owner_type === 'user' && $suggestion->suggested_owner_id === $parent->id)>{{ $parent->name }}</option>@endforeach
+                            @foreach($family->children as $child)<option value="{{ $child->id }}" @selected($suggestion->suggested_owner_type === 'child' && $suggestion->suggested_owner_id === $child->id)>{{ $child->displayName() }}</option>@endforeach
+                        </select>
+                    </div>
                     <div class="lg:col-span-4">
                         <label class="text-sm font-medium">Beschreibung</label>
                         <textarea class="mt-1 block w-full rounded-md border-stone-300" name="description" rows="2">{{ old('description', $suggestion->description) }}</textarea>
