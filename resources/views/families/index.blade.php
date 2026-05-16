@@ -1,4 +1,4 @@
-<x-layouts.app title="Familie">
+<x-layouts.app title="Einstellungen">
     @if($family)
         @include('families._show', ['family' => $family->loadMissing(['children', 'activeParents', 'events' => fn ($query) => $query->where('starts_at', '>=', now()->startOfDay())->orderBy('starts_at')->limit(8)])])
     @else
