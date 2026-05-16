@@ -19,7 +19,7 @@ class UpdateFamilyEventRequest extends FormRequest
         return $this->eventRules();
     }
 
-    public function data(): array
+    public function eventData(): array
     {
         return $this->normalizedEventData();
     }

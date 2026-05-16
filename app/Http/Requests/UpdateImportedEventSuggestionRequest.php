@@ -30,7 +30,7 @@ class UpdateImportedEventSuggestionRequest extends FormRequest
         ];
     }
 
-    public function data(): array
+    public function suggestionData(): array
     {
         $data = $this->validated();
         $data['all_day'] = $this->boolean('all_day');

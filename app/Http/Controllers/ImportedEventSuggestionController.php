@@ -10,7 +10,7 @@ class ImportedEventSuggestionController extends Controller
 {
     public function update(UpdateImportedEventSuggestionRequest $request, ImportedEventSuggestion $suggestion): RedirectResponse
     {
-        $suggestion->update($request->data());
+        $suggestion->update($request->suggestionData());
 
         return back()->with('status', 'Vorschlag wurde aktualisiert.');
     }

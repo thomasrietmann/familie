@@ -43,7 +43,7 @@ class FamilyEventController extends Controller
 
     public function store(StoreFamilyEventRequest $request, Family $family): RedirectResponse
     {
-        $event = $family->events()->create($request->data() + ['source' => 'manual']);
+        $event = $family->events()->create($request->eventData() + ['source' => 'manual']);
 
         return redirect()->route('families.events.show', [$family, $event])->with('status', 'Termin wurde erstellt.');
     }
@@ -65,7 +65,7 @@ class FamilyEventController extends Controller
 
     public function update(UpdateFamilyEventRequest $request, Family $family, FamilyEvent $event): RedirectResponse
     {
-        $event->update($request->data());
+        $event->update($request->eventData());
 
         return redirect()->route('families.events.show', [$family, $event])->with('status', 'Termin wurde aktualisiert.');
     }
