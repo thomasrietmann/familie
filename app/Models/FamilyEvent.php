@@ -24,6 +24,30 @@ class FamilyEvent extends Model
         'other',
     ];
 
+    public const CATEGORY_LABELS = [
+        'family_trip' => 'Familienausflug',
+        'playdate' => 'Spieltermin',
+        'birthday' => 'Geburtstag',
+        'school' => 'Schule',
+        'childcare' => 'Betreuung',
+        'medical' => 'Arzt / Gesundheit',
+        'sport' => 'Sport',
+        'holiday' => 'Ferien / Feiertag',
+        'meeting' => 'Besprechung',
+        'other' => 'Sonstiges',
+    ];
+
+    public const STATUS_LABELS = [
+        'planned' => 'Geplant',
+        'confirmed' => 'Bestätigt',
+        'cancelled' => 'Abgesagt',
+    ];
+
+    public const VISIBILITY_LABELS = [
+        'family' => 'Familie',
+        'parents_only' => 'Nur Eltern',
+    ];
+
     protected $fillable = [
         'family_id',
         'title',
@@ -115,5 +139,20 @@ class FamilyEvent extends Model
             'cancelled' => 'bg-rose-500',
             default => 'bg-amber-400',
         };
+    }
+
+    public function categoryLabel(): string
+    {
+        return self::CATEGORY_LABELS[$this->category] ?? $this->category;
+    }
+
+    public function statusLabel(): string
+    {
+        return self::STATUS_LABELS[$this->status] ?? $this->status;
+    }
+
+    public function visibilityLabel(): string
+    {
+        return self::VISIBILITY_LABELS[$this->visibility] ?? $this->visibility;
     }
 }

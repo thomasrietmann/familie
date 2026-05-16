@@ -55,4 +55,20 @@ class ImportedEventSuggestion extends Model
             default => 'Noch nicht zugeordnet',
         };
     }
+
+    public function categoryLabel(): string
+    {
+        return $this->category ? (FamilyEvent::CATEGORY_LABELS[$this->category] ?? $this->category) : 'Keine Kategorie';
+    }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'pending' => 'Offen',
+            'accepted' => 'Angenommen',
+            'rejected' => 'Abgelehnt',
+            'imported' => 'Importiert',
+            default => $this->status,
+        };
+    }
 }

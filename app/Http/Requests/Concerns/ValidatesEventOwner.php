@@ -68,6 +68,8 @@ trait ValidatesEventOwner
     {
         $data = $this->validated();
         $data['all_day'] = $this->boolean('all_day');
+        $data['owner_type'] = $data['owner_type'] ?? 'family';
+        $data['owner_id'] = $data['owner_id'] ?? null;
 
         if ($data['owner_type'] === 'family') {
             $data['owner_id'] = null;

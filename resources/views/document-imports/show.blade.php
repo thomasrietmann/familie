@@ -12,7 +12,7 @@
         <h2 class="mb-4 text-lg font-semibold">Erkannte Vorschläge</h2>
         <div class="divide-y divide-stone-100">
             @foreach($documentImport->suggestions as $suggestion)
-                <div class="py-3"><p class="font-medium">{{ $suggestion->title }}</p><p class="text-sm text-stone-600">{{ $suggestion->starts_at->format('d.m.Y H:i') }} · {{ $suggestion->ownerDisplayName() }} · {{ $suggestion->status }}</p></div>
+                <div class="py-3"><p class="font-medium">{{ $suggestion->title }}</p><p class="text-sm text-stone-600">{{ $suggestion->starts_at->format('d.m.Y H:i') }} · {{ $suggestion->categoryLabel() }} · {{ $suggestion->statusLabel() }}</p></div>
             @endforeach
         </div>
     </x-card>

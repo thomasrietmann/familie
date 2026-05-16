@@ -59,15 +59,9 @@ Neue Accounts können über `/register` erstellt werden. Die Registrierung legt 
 
 Ein Login verwaltet genau eine Familie. Jede Familie hat einen Owner. Aktive Eltern sind über `family_users` mit Rolle `owner` oder `parent` berechtigt. Policies schützen Familien, Kinder, Termine, Dokumentimporte und Import-Vorschläge. Ein Eltern-Login kann im MVP nicht mehreren Familien zugeordnet werden.
 
-## 6. Termin-Zugehörigkeit
+## 6. Termine
 
-Ein Termin gehört immer zu genau einer Ebene:
-
-- `owner_type = family`, `owner_id = null`: ganze Familie
-- `owner_type = user`, `owner_id = User-ID`: berechtigtes Elternteil
-- `owner_type = child`, `owner_id = Child-ID`: Kind der Familie
-
-Die Form Requests prüfen, dass Eltern Zugriff auf die Familie haben und Kinder zur Familie gehören.
+Manuell erfasste Termine sind Familientermine. Die frühere sichtbare Termin-Zugehörigkeit wurde aus dem MVP entfernt, damit Termine schneller und klarer erfasst werden können.
 
 ## 7. Dokument-Import Ablauf
 

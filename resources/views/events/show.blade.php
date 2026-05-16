@@ -10,8 +10,7 @@
         </div>
     </div>
     <div class="grid gap-6 lg:grid-cols-2">
-        <x-card><h2 class="mb-3 text-lg font-semibold">Übersicht</h2><p class="text-sm text-stone-700">{{ $event->description ?: 'Keine Beschreibung.' }}</p><div class="mt-4 flex gap-2"><x-badge>{{ $event->category }}</x-badge><x-badge>{{ $event->status }}</x-badge><x-badge>{{ $event->visibility }}</x-badge></div></x-card>
-        <x-card><h2 class="mb-3 text-lg font-semibold">Zugehörigkeit</h2><p>{{ $event->ownerDisplayName() }}</p><p class="mt-1 text-sm text-stone-500">{{ $event->owner_type }}</p></x-card>
+        <x-card><h2 class="mb-3 text-lg font-semibold">Übersicht</h2><p class="text-sm text-stone-700">{{ $event->description ?: 'Keine Beschreibung.' }}</p><div class="mt-4 flex gap-2"><x-badge>{{ $event->categoryLabel() }}</x-badge><x-badge>{{ $event->statusLabel() }}</x-badge><x-badge>{{ $event->visibilityLabel() }}</x-badge></div></x-card>
         <x-card><h2 class="mb-3 text-lg font-semibold">Ort</h2><p>{{ $event->location ?: 'Kein Ort hinterlegt.' }}</p></x-card>
         <x-card><h2 class="mb-3 text-lg font-semibold">Notizen</h2><p class="text-sm text-stone-700">{{ $event->notes ?: 'Keine Notizen.' }}</p></x-card>
         <x-card class="lg:col-span-2"><h2 class="mb-3 text-lg font-semibold">Quelle / Import-Dokument</h2><p class="text-sm text-stone-700">{{ $event->source === 'import' ? 'Importiert aus Dokument #'.$event->document_import_id : 'Manuell erfasst' }}</p></x-card>

@@ -18,8 +18,6 @@ class FamilyEventController extends Controller
         $this->authorize('view', $family);
 
         $events = $family->events()
-            ->when($request->filled('owner_type'), fn ($query) => $query->where('owner_type', $request->owner_type))
-            ->when($request->filled('owner_id'), fn ($query) => $query->where('owner_id', $request->owner_id))
             ->when($request->filled('category'), fn ($query) => $query->where('category', $request->category))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
             ->when($request->filled('visibility'), fn ($query) => $query->where('visibility', $request->visibility))
@@ -38,7 +36,7 @@ class FamilyEventController extends Controller
     {
         $this->authorize('update', $family);
         $family->load(['children', 'activeParents']);
-        $event = new FamilyEvent(['category' => 'other', 'visibility' => 'family', 'status' => 'planned', 'owner_type' => 'family']);
+        $event = new FamilyEvent(['category' => 'other', 'visibility' => 'family', 'status' => 'planned', 'owner_type' => 'family', 'owner_id' => null]);
 
         return view('events.create', compact('family', 'event'));
     }
