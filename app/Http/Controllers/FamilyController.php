@@ -14,18 +14,26 @@ class FamilyController extends Controller
 {
     public function index(Request $request): View
     {
-        $families = $request->user()->activeFamilies()->withCount(['children', 'events', 'documentImports'])->get();
+        $family = $request->user()->managedFamily();
 
-        return view('families.index', compact('families'));
+        return view('families.index', compact('family'));
     }
 
-    public function create(): View
+    public function create(Request $request): View|RedirectResponse
     {
+        if ($request->user()->hasManagedFamily()) {
+            return redirect()->route('families.index')->with('status', 'Dieser Login verwaltet bereits eine Familie.');
+        }
+
         return view('families.create');
     }
 
     public function store(StoreFamilyRequest $request): RedirectResponse
     {
+        if ($request->user()->hasManagedFamily()) {
+            return redirect()->route('families.index')->with('status', 'Dieser Login verwaltet bereits eine Familie.');
+        }
+
         $family = Family::create($request->validated() + ['owner_user_id' => $request->user()->id]);
         $family->users()->attach($request->user()->id, [
             'role' => 'owner',
@@ -33,7 +41,7 @@ class FamilyController extends Controller
             'accepted_at' => now(),
         ]);
 
-        return redirect()->route('families.show', $family)->with('status', 'Familie wurde erstellt.');
+        return redirect()->route('families.index')->with('status', 'Familie wurde erstellt.');
     }
 
     public function show(Family $family): View
@@ -55,7 +63,7 @@ class FamilyController extends Controller
     {
         $family->update($request->validated());
 
-        return redirect()->route('families.show', $family)->with('status', 'Familie wurde aktualisiert.');
+        return redirect()->route('families.index')->with('status', 'Familie wurde aktualisiert.');
     }
 
     public function destroy(Family $family): RedirectResponse

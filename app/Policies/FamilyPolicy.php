@@ -22,7 +22,7 @@ class FamilyPolicy
 
     public function create(User $user): bool
     {
-        return true;
+        return ! $user->hasManagedFamily();
     }
 
     public function update(User $user, Family $family): bool

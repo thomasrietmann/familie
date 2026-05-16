@@ -1,11 +1,22 @@
 <x-layouts.app title="Dashboard">
     <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-            <h1 class="text-3xl font-semibold tracking-tight">Familien-Terminübersicht</h1>
-            <p class="mt-2 text-sm text-stone-600">Heute, morgen, diese Woche und offene Import-Vorschläge auf einen Blick.</p>
+            <h1 class="text-3xl font-semibold tracking-tight">{{ $family?->name ?? 'FamilyManager' }}</h1>
+            <p class="mt-2 text-sm text-stone-600">Termine, Kinder, Dokumente und offene Import-Vorschläge auf einen Blick.</p>
         </div>
-        <a href="{{ route('families.create') }}" class="inline-flex items-center justify-center rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700">Familie erstellen</a>
+        @if($family)
+            <a href="{{ route('families.events.create', $family) }}" class="inline-flex items-center justify-center rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700">Termin erfassen</a>
+        @else
+            <a href="{{ route('families.create') }}" class="inline-flex items-center justify-center rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700">Familie erstellen</a>
+        @endif
     </div>
+
+    @unless($family)
+        <x-card>
+            <h2 class="text-lg font-semibold">Noch keine Familie verbunden</h2>
+            <p class="mt-2 text-sm text-stone-600">Dieser Login verwaltet genau eine Familie. Erstelle die Familie, danach erscheinen Dashboard, Termine, Kinder und Dokumente hier.</p>
+        </x-card>
+    @else
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <x-card><p class="text-sm text-stone-500">Termine heute</p><p class="mt-2 text-3xl font-semibold">{{ $eventsToday->count() }}</p></x-card>
@@ -53,7 +64,7 @@
         <x-card>
             <h2 class="mb-4 text-lg font-semibold">Kinder mit nächsten Terminen</h2>
             <div class="space-y-3">
-                @foreach($families->flatMap->children as $child)
+                @foreach($family->children as $child)
                     @php($event = $nextEventPerChild[$child->id] ?? null)
                     <div class="rounded-md bg-stone-50 p-3">
                         <p class="font-medium">{{ $child->displayName() }}</p>
@@ -65,7 +76,7 @@
         <x-card>
             <h2 class="mb-4 text-lg font-semibold">Elternteile mit nächsten Terminen</h2>
             <div class="space-y-3">
-                @foreach($families->flatMap->activeParents->unique('id') as $parent)
+                @foreach($family->activeParents as $parent)
                     @php($event = $nextEventPerParent[$parent->id] ?? null)
                     <div class="rounded-md bg-stone-50 p-3">
                         <p class="font-medium">{{ $parent->name }}</p>
@@ -75,4 +86,5 @@
             </div>
         </x-card>
     </div>
+    @endunless
 </x-layouts.app>

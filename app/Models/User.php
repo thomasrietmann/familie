@@ -42,4 +42,17 @@ class User extends Authenticatable
     {
         return $this->families()->wherePivot('status', 'active');
     }
+
+    public function managedFamily(): ?Family
+    {
+        return $this->activeFamilies()
+            ->with(['children', 'activeParents', 'documentImports'])
+            ->orderBy('families.created_at')
+            ->first();
+    }
+
+    public function hasManagedFamily(): bool
+    {
+        return $this->activeFamilies()->exists();
+    }
 }

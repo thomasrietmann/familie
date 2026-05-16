@@ -17,6 +17,10 @@ class FamilyParentController extends Controller
             return back()->with('status', 'Für dieses MVP wurde die Einladung vorgemerkt. Sobald ein User mit dieser E-Mail existiert, kann er berechtigt werden.');
         }
 
+        if ($user->hasManagedFamily() && ! $family->users()->whereKey($user->id)->exists()) {
+            return back()->withErrors(['email' => 'Dieser Login verwaltet bereits eine andere Familie.']);
+        }
+
         $family->users()->syncWithoutDetaching([
             $user->id => [
                 'role' => 'parent',

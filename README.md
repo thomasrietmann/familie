@@ -55,7 +55,7 @@ Die App nutzt für das MVP statische Assets in `public/css` und `public/js` sowi
 
 ## 5. Familien- und Elternrechte
 
-Jede Familie hat einen Owner. Aktive Eltern sind über `family_users` mit Rolle `owner` oder `parent` berechtigt. Policies schützen Familien, Kinder, Termine, Dokumentimporte und Import-Vorschläge.
+Ein Login verwaltet genau eine Familie. Jede Familie hat einen Owner. Aktive Eltern sind über `family_users` mit Rolle `owner` oder `parent` berechtigt. Policies schützen Familien, Kinder, Termine, Dokumentimporte und Import-Vorschläge. Ein Eltern-Login kann im MVP nicht mehreren Familien zugeordnet werden.
 
 ## 6. Termin-Zugehörigkeit
 
