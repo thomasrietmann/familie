@@ -21,5 +21,9 @@
             </label>
             <button class="w-full rounded-md bg-stone-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-stone-700" type="submit">Login</button>
         </form>
+        <p class="mt-5 text-center text-sm text-stone-600">
+            Noch kein Account?
+            <a class="font-medium text-stone-900 hover:underline" href="{{ route('register') }}">Registrieren</a>
+        </p>
     </div>
 </x-layouts.app>

@@ -53,6 +53,8 @@ Die App nutzt für das MVP statische Assets in `public/css` und `public/js` sowi
 - E-Mail: `thomas@example.com`
 - Passwort: `password`
 
+Neue Accounts können über `/register` erstellt werden. Die Registrierung legt direkt eine Familie an und macht den neuen User zum Owner.
+
 ## 5. Familien- und Elternrechte
 
 Ein Login verwaltet genau eine Familie. Jede Familie hat einen Owner. Aktive Eltern sind über `family_users` mit Rolle `owner` oder `parent` berechtigt. Policies schützen Familien, Kinder, Termine, Dokumentimporte und Import-Vorschläge. Ein Eltern-Login kann im MVP nicht mehreren Familien zugeordnet werden.
