@@ -16,7 +16,7 @@
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <div class="flex items-center gap-2"><span class="status-dot {{ $event->statusColor() }}"></span><a class="font-semibold hover:underline" href="{{ route('families.events.show', [$family, $event]) }}">{{ $event->title }}</a></div>
-                        <p class="mt-1 text-sm text-stone-600">{{ $event->starts_at->format('d.m.Y H:i') }} · {{ $event->ownerDisplayName() }} · {{ $event->location ?: 'Kein Ort' }}</p>
+                        <p class="mt-1 text-sm text-stone-600">{{ $event->starts_at->format('d.m.Y H:i') }} · {{ $event->location ?: 'Kein Ort' }}</p>
                     </div>
                     <div class="flex gap-2"><x-badge>{{ $event->categoryLabel() }}</x-badge><x-badge>{{ $event->visibilityLabel() }}</x-badge></div>
                 </div>

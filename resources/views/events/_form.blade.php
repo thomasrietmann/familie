@@ -8,32 +8,8 @@
         <input class="mt-1 block w-full rounded-md border-stone-300" id="title" name="title" value="{{ old('title', $event->title) }}" required>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-3">
-        <div>
-            <label class="text-sm font-medium" for="owner_type">Für wen?</label>
-            <select class="mt-1 block w-full rounded-md border-stone-300" id="owner_type" name="owner_type" required>
-                <option value="family" @selected(old('owner_type', $event->owner_type) === 'family')>Ganze Familie</option>
-                <option value="user" @selected(old('owner_type', $event->owner_type) === 'user')>Elternteil</option>
-                <option value="child" @selected(old('owner_type', $event->owner_type) === 'child')>Kind</option>
-            </select>
-        </div>
-        <div class="md:col-span-2">
-            <label class="text-sm font-medium" for="owner_id">Person</label>
-            <select class="mt-1 block w-full rounded-md border-stone-300" id="owner_id" name="owner_id">
-                <option value="">Ganze Familie / keine Person</option>
-                <optgroup label="Elternteile">
-                    @foreach($family->activeParents as $parent)
-                        <option value="{{ $parent->id }}" @selected((string) old('owner_id', $event->owner_id) === (string) $parent->id && old('owner_type', $event->owner_type) === 'user')>{{ $parent->name }}</option>
-                    @endforeach
-                </optgroup>
-                <optgroup label="Kinder">
-                    @foreach($family->children as $child)
-                        <option value="{{ $child->id }}" @selected((string) old('owner_id', $event->owner_id) === (string) $child->id && old('owner_type', $event->owner_type) === 'child')>{{ $child->displayName() }}</option>
-                    @endforeach
-                </optgroup>
-            </select>
-        </div>
-    </div>
+    <input type="hidden" name="owner_type" value="family">
+    <input type="hidden" name="owner_id" value="">
 
     <div class="grid gap-4 md:grid-cols-2">
         <div>
