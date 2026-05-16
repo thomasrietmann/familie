@@ -13,12 +13,25 @@
 </head>
 <body class="min-h-screen text-stone-900 antialiased">
     <div class="border-b border-stone-200 bg-white">
-        <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-            <a href="{{ route('dashboard') }}" class="flex w-fit items-center gap-3">
-                <img src="{{ asset('images/familymanager-logo.png') }}" alt="FamilyManager" class="h-9 w-auto max-w-[220px] object-contain sm:max-w-[280px]">
-            </a>
+        <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between gap-4">
+                <a href="{{ route('dashboard') }}" class="flex w-fit items-center gap-3">
+                    <img src="{{ asset('images/familymanager-logo.png') }}" alt="FamilyManager" class="h-9 w-auto max-w-[220px] object-contain sm:max-w-[280px]">
+                </a>
+                @auth
+                    <button class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-stone-300 text-stone-700 hover:bg-stone-100 lg:hidden" type="button" data-mobile-menu-button aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only">Menü öffnen</span>
+                        <svg class="h-5 w-5" data-mobile-menu-open-icon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="hidden h-5 w-5" data-mobile-menu-close-icon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                @endauth
+            </div>
             @auth
-                <nav class="flex flex-wrap items-center gap-2 text-sm">
+                <nav id="mobile-menu" class="mt-4 hidden flex-col gap-1 text-sm lg:mt-0 lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:justify-end lg:gap-2" data-mobile-menu>
                     <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('dashboard') }}">Dashboard</a>
                     @php($navFamily = auth()->user()->managedFamily())
                     @if($navFamily)
@@ -32,7 +45,7 @@
                     @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button class="rounded-md px-3 py-2 text-stone-600 hover:bg-stone-100" type="submit">Logout</button>
+                        <button class="w-full rounded-md px-3 py-2 text-left text-stone-600 hover:bg-stone-100 lg:w-auto" type="submit">Logout</button>
                     </form>
                 </nav>
             @endauth
