@@ -87,6 +87,8 @@ GET /public/family/{token}
 
 Die Ansicht funktioniert ohne Login und zeigt nur Termine von heute und morgen. `parents_only` Termine, Dokumente, Notizen, Importdaten, interne IDs und Bearbeitungsaktionen werden nicht angezeigt.
 
+Zusätzlich kann ein separater Dashboard Secret Link aktiviert werden. Dieser zeigt ohne Login nur öffentliche Termin-Kennzahlen und nächste sichtbare Termine, ebenfalls ohne Dokumente, Notizen, Importdaten oder Admin-Aktionen.
+
 ## 10. Storage Link
 
 Für hochgeladene Dokumente:

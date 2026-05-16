@@ -43,4 +43,33 @@ class FamilyPublicLinkController extends Controller
 
         return back()->with('status', 'Secret Link wurde deaktiviert.');
     }
+
+    public function enableDashboard(Family $family): RedirectResponse
+    {
+        $this->authorize('update', $family);
+
+        if (! $family->dashboard_public_token) {
+            $family->generateDashboardPublicToken();
+        } else {
+            $family->update(['dashboard_public_token_enabled' => true]);
+        }
+
+        return back()->with('status', 'Dashboard Secret Link wurde aktiviert.');
+    }
+
+    public function regenerateDashboard(Family $family): RedirectResponse
+    {
+        $this->authorize('update', $family);
+        $family->generateDashboardPublicToken();
+
+        return back()->with('status', 'Dashboard Secret Link wurde neu generiert.');
+    }
+
+    public function disableDashboard(Family $family): RedirectResponse
+    {
+        $this->authorize('update', $family);
+        $family->disableDashboardPublicToken();
+
+        return back()->with('status', 'Dashboard Secret Link wurde deaktiviert.');
+    }
 }

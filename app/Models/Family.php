@@ -18,6 +18,8 @@ class Family extends Model
         'owner_user_id',
         'public_token',
         'public_token_enabled',
+        'dashboard_public_token',
+        'dashboard_public_token_enabled',
         'notes',
     ];
 
@@ -25,6 +27,7 @@ class Family extends Model
     {
         return [
             'public_token_enabled' => 'boolean',
+            'dashboard_public_token_enabled' => 'boolean',
         ];
     }
 
@@ -87,5 +90,34 @@ class Family extends Model
     public function disablePublicToken(): void
     {
         $this->forceFill(['public_token_enabled' => false])->save();
+    }
+
+    public function hasDashboardPublicToken(): bool
+    {
+        return $this->dashboard_public_token_enabled && filled($this->dashboard_public_token);
+    }
+
+    public function dashboardPublicUrl(): ?string
+    {
+        return $this->hasDashboardPublicToken() ? route('public.dashboard', $this->dashboard_public_token) : null;
+    }
+
+    public function generateDashboardPublicToken(): string
+    {
+        do {
+            $token = Str::random(48);
+        } while (self::where('dashboard_public_token', $token)->exists());
+
+        $this->forceFill([
+            'dashboard_public_token' => $token,
+            'dashboard_public_token_enabled' => true,
+        ])->save();
+
+        return $token;
+    }
+
+    public function disableDashboardPublicToken(): void
+    {
+        $this->forceFill(['dashboard_public_token_enabled' => false])->save();
     }
 }

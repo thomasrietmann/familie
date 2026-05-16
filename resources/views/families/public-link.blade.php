@@ -1,7 +1,7 @@
 <x-layouts.app title="Secret Link">
     <div class="mx-auto max-w-3xl">
         <h1 class="text-3xl font-semibold tracking-tight">Secret Link</h1>
-        <p class="mt-2 text-sm text-stone-600">{{ $family->name }} · read-only Ansicht für heute und morgen.</p>
+        <p class="mt-2 text-sm text-stone-600">{{ $family->name }} · read-only Links ohne Login.</p>
 
         <x-card class="mt-6">
             <div class="flex items-center justify-between">
@@ -20,6 +20,26 @@
                 <form method="POST" action="{{ route('families.public-link.enable', $family) }}">@csrf<button class="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white">Aktivieren</button></form>
                 <form method="POST" action="{{ route('families.public-link.regenerate', $family) }}">@csrf<button class="rounded-md border border-stone-300 px-4 py-2 text-sm font-medium">Neu generieren</button></form>
                 <form method="POST" action="{{ route('families.public-link.disable', $family) }}">@csrf<button class="rounded-md border border-rose-300 px-4 py-2 text-sm font-medium text-rose-700">Deaktivieren</button></form>
+            </div>
+        </x-card>
+
+        <x-card class="mt-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-stone-500">Dashboard Secret Link</p>
+                    <p class="mt-1 text-xl font-semibold">{{ $family->hasDashboardPublicToken() ? 'aktiv' : 'inaktiv' }}</p>
+                </div>
+                <x-badge :tone="$family->hasDashboardPublicToken() ? 'green' : 'stone'">{{ $family->hasDashboardPublicToken() ? 'aktiv' : 'inaktiv' }}</x-badge>
+            </div>
+            @if($family->hasDashboardPublicToken())
+                <div class="mt-5 rounded-md bg-stone-50 p-3 text-sm break-all">
+                    <a class="font-medium hover:underline" href="{{ $family->dashboardPublicUrl() }}" target="_blank">{{ $family->dashboardPublicUrl() }}</a>
+                </div>
+            @endif
+            <div class="mt-5 flex flex-wrap gap-2">
+                <form method="POST" action="{{ route('families.public-link.dashboard.enable', $family) }}">@csrf<button class="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white">Aktivieren</button></form>
+                <form method="POST" action="{{ route('families.public-link.dashboard.regenerate', $family) }}">@csrf<button class="rounded-md border border-stone-300 px-4 py-2 text-sm font-medium">Neu generieren</button></form>
+                <form method="POST" action="{{ route('families.public-link.dashboard.disable', $family) }}">@csrf<button class="rounded-md border border-rose-300 px-4 py-2 text-sm font-medium text-rose-700">Deaktivieren</button></form>
             </div>
         </x-card>
     </div>

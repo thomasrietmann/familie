@@ -10,6 +10,7 @@ use App\Http\Controllers\FamilyEventController;
 use App\Http\Controllers\FamilyParentController;
 use App\Http\Controllers\FamilyPublicLinkController;
 use App\Http\Controllers\ImportedEventSuggestionController;
+use App\Http\Controllers\PublicDashboardController;
 use App\Http\Controllers\PublicFamilyController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 Route::get('/public/family/{token}', [PublicFamilyController::class, 'show'])->name('public.family');
+Route::get('/public/dashboard/{token}', [PublicDashboardController::class, 'show'])->name('public.dashboard');
 
 Route::middleware('auth')->scopeBindings()->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -45,5 +47,8 @@ Route::middleware('auth')->scopeBindings()->group(function (): void {
     Route::post('/families/{family}/public-link/enable', [FamilyPublicLinkController::class, 'enable'])->name('families.public-link.enable');
     Route::post('/families/{family}/public-link/regenerate', [FamilyPublicLinkController::class, 'regenerate'])->name('families.public-link.regenerate');
     Route::post('/families/{family}/public-link/disable', [FamilyPublicLinkController::class, 'disable'])->name('families.public-link.disable');
+    Route::post('/families/{family}/public-link/dashboard/enable', [FamilyPublicLinkController::class, 'enableDashboard'])->name('families.public-link.dashboard.enable');
+    Route::post('/families/{family}/public-link/dashboard/regenerate', [FamilyPublicLinkController::class, 'regenerateDashboard'])->name('families.public-link.dashboard.regenerate');
+    Route::post('/families/{family}/public-link/dashboard/disable', [FamilyPublicLinkController::class, 'disableDashboard'])->name('families.public-link.dashboard.disable');
     Route::post('/families/{family}/parents/invite', [FamilyParentController::class, 'invite'])->name('families.parents.invite');
 });
