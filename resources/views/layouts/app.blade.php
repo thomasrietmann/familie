@@ -15,7 +15,6 @@
     <div class="border-b border-stone-200 bg-white">
         <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
             <a href="{{ route('dashboard') }}" class="flex w-fit items-center gap-3">
-                <img src="{{ asset('images/familymanager-icon.png') }}" alt="" class="h-10 w-10 rounded-lg object-contain">
                 <img src="{{ asset('images/familymanager-logo.png') }}" alt="FamilyManager" class="h-9 w-auto max-w-[220px] object-contain sm:max-w-[280px]">
             </a>
             @auth
