@@ -1,7 +1,8 @@
 <x-layouts.app title="Login">
     <div class="mx-auto max-w-md">
-        <div class="mb-8">
-            <h1 class="text-3xl font-semibold tracking-tight">Anmelden</h1>
+        <div class="mb-8 text-center">
+            <img src="{{ asset('images/familymanager-logo.png') }}" alt="FamilyManager" class="mx-auto h-16 w-auto max-w-full object-contain">
+            <h1 class="mt-6 text-3xl font-semibold tracking-tight">Anmelden</h1>
             <p class="mt-2 text-sm text-stone-600">Test-Login: thomas@example.com / password</p>
         </div>
         <form method="POST" action="{{ route('login') }}" class="space-y-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">

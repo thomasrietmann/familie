@@ -5,12 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'FamilyManager' }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/familymanager-icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/familymanager-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen text-stone-900 antialiased">
     <div class="border-b border-stone-200 bg-white">
         <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-            <a href="{{ route('dashboard') }}" class="text-xl font-semibold tracking-tight">FamilyManager</a>
+            <a href="{{ route('dashboard') }}" class="flex w-fit items-center gap-3">
+                <img src="{{ asset('images/familymanager-icon.png') }}" alt="" class="h-10 w-10 rounded-lg object-contain">
+                <img src="{{ asset('images/familymanager-logo.png') }}" alt="FamilyManager" class="h-9 w-auto max-w-[220px] object-contain sm:max-w-[280px]">
+            </a>
             @auth
                 <nav class="flex flex-wrap items-center gap-2 text-sm">
                     <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('dashboard') }}">Dashboard</a>
