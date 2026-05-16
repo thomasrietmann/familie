@@ -7,7 +7,9 @@
     <title>{{ $title ?? 'FamilyManager' }}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/familymanager-icon.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/familymanager-icon.png') }}">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <script defer src="{{ asset('js/app.js') }}"></script>
 </head>
 <body class="min-h-screen text-stone-900 antialiased">
     <div class="border-b border-stone-200 bg-white">

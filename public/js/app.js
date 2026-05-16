@@ -1,0 +1,1 @@
+window.FamilyManager = window.FamilyManager || {};

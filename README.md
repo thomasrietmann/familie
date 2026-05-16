@@ -6,7 +6,6 @@ FamilyManager ist ein klassisches Laravel-MVC-MVP für eine persönliche Familie
 
 ```bash
 composer install
-npm install
 cp .env.example .env
 php artisan key:generate
 ```
@@ -44,15 +43,10 @@ Der Seeder erstellt die Familie Rietmann, zwei Eltern-User, zwei Kinder, Beispie
 ## 3. Start der App
 
 ```bash
-npm run build
 php artisan serve
 ```
 
-Für aktive Vite-Entwicklung:
-
-```bash
-npm run dev
-```
+Die App nutzt für das MVP statische Assets in `public/css` und `public/js` sowie Tailwind über CDN. Ein Node-/npm-Build ist dadurch für Metanet nicht nötig.
 
 ## 4. Test-Login
 
@@ -116,7 +110,7 @@ Uploads werden unter `storage/app/public/document-imports` gespeichert.
 - Führe nach dem Upload `php artisan migrate --force` aus.
 - Führe `php artisan storage:link` aus oder lege den Symlink `public/storage -> ../storage/app/public` an.
 - Setze `APP_ENV=production`, `APP_DEBUG=false` und `APP_URL` auf deine echte Domain.
-- Baue die Assets lokal mit `npm run build` und deploye den Ordner `public/build`.
+- Für dieses MVP ist kein `npm install` und kein Vite-Build auf Metanet nötig.
 
 ## 11. Nächste mögliche Features
 

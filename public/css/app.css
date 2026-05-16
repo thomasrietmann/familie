@@ -1,0 +1,14 @@
+:root {
+    color-scheme: light;
+}
+
+body {
+    background: #f6f7f4;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 9999px;
+}

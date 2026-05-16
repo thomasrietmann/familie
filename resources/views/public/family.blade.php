@@ -6,7 +6,9 @@
     <title>{{ $family->name }} · Heute und morgen</title>
     <link rel="icon" type="image/png" href="{{ asset('images/familymanager-icon.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/familymanager-icon.png') }}">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <script defer src="{{ asset('js/app.js') }}"></script>
 </head>
 <body class="min-h-screen bg-stone-50 text-stone-900 antialiased">
     <main class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
