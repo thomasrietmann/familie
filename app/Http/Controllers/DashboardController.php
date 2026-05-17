@@ -26,7 +26,6 @@ class DashboardController extends Controller
                 'nextFamilyEvent' => null,
                 'nextEventPerChild' => collect(),
                 'nextEventPerParent' => collect(),
-                'birthdaysThisMonthCount' => 0,
                 'recentDocuments' => collect(),
             ]);
         }
@@ -69,7 +68,6 @@ class DashboardController extends Controller
             'nextFamilyEvent' => FamilyEvent::where('family_id', $family->id)->where('owner_type', 'family')->where('starts_at', '>=', $today)->orderBy('starts_at')->first(),
             'nextEventPerChild' => $nextEventPerChild,
             'nextEventPerParent' => $nextEventPerParent,
-            'birthdaysThisMonthCount' => $family->children->filter(fn ($child) => $child->birthdate?->month === now()->month)->count(),
             'recentDocuments' => $family->documentImports->sortByDesc('created_at')->take(5),
         ]);
     }

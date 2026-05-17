@@ -75,10 +75,6 @@
                 @endif
             </div>
 
-            <div class="mt-6 border-t border-stone-100 pt-4">
-                <p class="text-sm text-stone-500">Geburtstage diesen Monat</p>
-                <p class="mt-1 text-2xl font-semibold">{{ $birthdaysThisMonthCount }}</p>
-            </div>
         </x-card>
     </div>
 
