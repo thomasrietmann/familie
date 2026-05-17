@@ -8,8 +8,8 @@
                 <input class="mt-1 block w-full rounded-md border-stone-300" id="title" name="title" value="{{ old('title') }}" required>
             </div>
             <div>
-                <label class="text-sm font-medium" for="document">PDF oder Word-Dokument</label>
-                <input class="mt-1 block w-full rounded-md border-stone-300 text-sm" id="document" name="document" type="file" accept=".pdf,.docx" required>
+                <label class="text-sm font-medium" for="document">PDF, Word-Dokument oder Bild</label>
+                <input class="mt-1 block w-full rounded-md border-stone-300 text-sm" id="document" name="document" type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,.webp,.tif,.tiff" required>
             </div>
             <div class="grid gap-4 md:grid-cols-3">
                 <div>

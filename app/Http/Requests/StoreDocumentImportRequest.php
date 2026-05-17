@@ -19,7 +19,7 @@ class StoreDocumentImportRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'document' => ['required', 'file', 'mimes:pdf,docx', 'max:10240'],
+            'document' => ['required', 'file', 'mimes:pdf,docx,jpg,jpeg,png,webp,tif,tiff', 'max:10240'],
             'target_type' => ['required', 'in:family,user,child'],
             'target_id' => ['nullable', 'integer'],
             'notes' => ['nullable', 'string'],
