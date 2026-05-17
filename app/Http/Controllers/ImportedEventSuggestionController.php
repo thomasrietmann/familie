@@ -20,10 +20,10 @@ class ImportedEventSuggestionController extends Controller
     {
         $this->authorize('update', $suggestion);
 
-        $event = $this->importSuggestion($suggestion);
+        $this->importSuggestion($suggestion);
         $suggestion->documentImport->update(['status' => 'imported']);
 
-        return redirect()->route('families.events.show', [$suggestion->family, $event])->with('status', 'Vorschlag wurde importiert.');
+        return back()->with('status', 'Vorschlag wurde importiert.');
     }
 
     public function acceptAll(ImportedEventSuggestion $suggestion): RedirectResponse
