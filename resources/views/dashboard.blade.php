@@ -27,21 +27,28 @@
 
     <div class="mt-6 grid gap-6 lg:grid-cols-3">
         <x-card class="lg:col-span-2">
-            <div class="mb-4 flex items-center justify-between">
-                <h2 class="text-lg font-semibold">Nächste Termine</h2>
-            </div>
             <div class="divide-y divide-stone-100">
-                @forelse($upcomingEvents as $event)
-                    <div class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <div class="flex items-center gap-2"><x-owner-dot :event="$event" /><a class="font-medium hover:underline" href="{{ route('families.events.show', [$event->family, $event]) }}">{{ $event->title }}</a></div>
-                            <p class="text-sm text-stone-600">{{ $event->dashboardDateLabel() }} · {{ $event->ownerDisplayName() }}</p>
+                @foreach($weekDays as $day)
+                    <section class="py-4 first:pt-0 last:pb-0">
+                        <h2 class="text-base font-semibold">{{ $day['date_label'] }} - {{ $day['day_label'] }}</h2>
+                        <div class="mt-3 space-y-3">
+                            @forelse($day['events'] as $event)
+                                <div class="flex flex-col gap-2 rounded-md bg-stone-50 p-3 sm:flex-row sm:items-start sm:justify-between">
+                                    <div>
+                                        <div class="flex items-center gap-2"><x-owner-dot :event="$event" /><a class="font-medium hover:underline" href="{{ route('families.events.show', [$event->family, $event]) }}">{{ $event->title }}</a></div>
+                                        <p class="text-sm text-stone-600">{{ $event->dashboardTimeLabel() }} · {{ $event->ownerDisplayName() }}</p>
+                                        @if($event->location)
+                                            <p class="mt-1 text-sm text-stone-600">{{ $event->location }}</p>
+                                        @endif
+                                    </div>
+                                    <x-badge>{{ $event->categoryLabel() }}</x-badge>
+                                </div>
+                            @empty
+                                <p class="rounded-md bg-stone-50 p-3 text-sm text-stone-500">Kein Termin</p>
+                            @endforelse
                         </div>
-                        <x-badge>{{ $event->categoryLabel() }}</x-badge>
-                    </div>
-                @empty
-                    <p class="py-6 text-sm text-stone-500">Noch keine kommenden Termine.</p>
-                @endforelse
+                    </section>
+                @endforeach
             </div>
         </x-card>
 

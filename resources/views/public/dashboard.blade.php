@@ -13,47 +13,31 @@
 </head>
 <body class="min-h-screen bg-stone-50 text-stone-900 antialiased">
     <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-                <p class="text-sm text-stone-500">Heute</p>
-                <p class="mt-2 text-3xl font-semibold">{{ $eventsToday->count() }}</p>
-            </div>
-            <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-                <p class="text-sm text-stone-500">Morgen</p>
-                <p class="mt-2 text-3xl font-semibold">{{ $eventsTomorrow->count() }}</p>
-            </div>
-            <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-                <p class="text-sm text-stone-500">Diese Woche</p>
-                <p class="mt-2 text-3xl font-semibold">{{ $eventsThisWeek->count() }}</p>
-            </div>
-            <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-                <p class="text-sm text-stone-500">Nächster Termin</p>
-                <p class="mt-2 text-base font-semibold">{{ $nextEvent?->title ?? 'Kein Termin' }}</p>
-                @if($nextEvent)
-                    <p class="mt-1 text-sm text-stone-600">{{ $nextEvent->dashboardDateLabel() }} · {{ $nextEvent->ownerDisplayName() }}</p>
-                @endif
-            </div>
-        </div>
-
-        <section class="mt-6 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-            <h1 class="mb-4 text-xl font-semibold">Nächste Termine</h1>
+        <section class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
             <div class="divide-y divide-stone-100">
-                @forelse($upcomingEvents as $event)
-                    <div class="py-3">
-                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <div class="flex items-center gap-2"><x-owner-dot :event="$event" /><p class="font-semibold">{{ $event->title }}</p></div>
-                                <p class="text-sm text-stone-600">{{ $event->dashboardDateLabel() }} · {{ $event->ownerDisplayName() }}</p>
-                            </div>
-                            <span class="inline-flex w-fit rounded-md bg-stone-100 px-2 py-1 text-xs font-medium text-stone-700">{{ $event->categoryLabel() }}</span>
+                @foreach($weekDays as $day)
+                    <section class="py-4 first:pt-0 last:pb-0">
+                        <h2 class="text-base font-semibold">{{ $day['date_label'] }} - {{ $day['day_label'] }}</h2>
+                        <div class="mt-3 space-y-3">
+                            @forelse($day['events'] as $event)
+                                <div class="rounded-md bg-stone-50 p-3">
+                                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                        <div>
+                                            <div class="flex items-center gap-2"><x-owner-dot :event="$event" /><p class="font-semibold">{{ $event->title }}</p></div>
+                                            <p class="text-sm text-stone-600">{{ $event->dashboardTimeLabel() }} · {{ $event->ownerDisplayName() }}</p>
+                                            @if($event->location)
+                                                <p class="mt-1 text-sm text-stone-600">{{ $event->location }}</p>
+                                            @endif
+                                        </div>
+                                        <span class="inline-flex w-fit rounded-md bg-stone-100 px-2 py-1 text-xs font-medium text-stone-700">{{ $event->categoryLabel() }}</span>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="rounded-md bg-stone-50 p-3 text-sm text-stone-500">Kein Termin</p>
+                            @endforelse
                         </div>
-                        @if($event->location)
-                            <p class="mt-2 text-sm text-stone-600">{{ $event->location }}</p>
-                        @endif
-                    </div>
-                @empty
-                    <p class="py-4 text-sm text-stone-500">Keine sichtbaren Termine.</p>
-                @endforelse
+                    </section>
+                @endforeach
             </div>
         </section>
     </main>

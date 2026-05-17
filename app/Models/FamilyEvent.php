@@ -151,6 +151,19 @@ class FamilyEvent extends Model
             : $this->starts_at->format('d.m.Y H:i');
     }
 
+    public function dashboardTimeLabel(): string
+    {
+        if ($this->all_day) {
+            return 'Ganztägig';
+        }
+
+        if ($this->ends_at) {
+            return $this->starts_at->format('H:i').' - '.$this->ends_at->format('H:i');
+        }
+
+        return $this->starts_at->format('H:i');
+    }
+
     public function categoryLabel(): string
     {
         return self::CATEGORY_LABELS[$this->category] ?? $this->category;
