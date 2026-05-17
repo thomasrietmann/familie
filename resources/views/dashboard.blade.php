@@ -18,14 +18,7 @@
         </x-card>
     @else
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <x-card><p class="text-sm text-stone-500">Termine heute</p><p class="mt-2 text-3xl font-semibold">{{ $eventsToday->count() }}</p></x-card>
-        <x-card><p class="text-sm text-stone-500">Termine morgen</p><p class="mt-2 text-3xl font-semibold">{{ $eventsTomorrow->count() }}</p></x-card>
-        <x-card><p class="text-sm text-stone-500">Diese Woche</p><p class="mt-2 text-3xl font-semibold">{{ $eventsThisWeek->count() }}</p></x-card>
-        <x-card><p class="text-sm text-stone-500">Offene Import-Vorschläge</p><p class="mt-2 text-3xl font-semibold">{{ $openSuggestionsCount }}</p></x-card>
-    </div>
-
-    <div class="mt-6 grid gap-6 lg:grid-cols-3">
+    <div class="grid gap-6 lg:grid-cols-3">
         <x-card class="lg:col-span-2">
             <div class="divide-y divide-stone-100">
                 @foreach($weekDays as $day)
@@ -53,13 +46,35 @@
         </x-card>
 
         <x-card>
-            <h2 class="text-lg font-semibold">Nächster Familientermin</h2>
-            @if($nextFamilyEvent)
-                <p class="mt-4 font-medium">{{ $nextFamilyEvent->title }}</p>
-                <p class="text-sm text-stone-600">{{ $nextFamilyEvent->dashboardDateLabel() }}</p>
-            @else
-                <p class="mt-4 text-sm text-stone-500">Kein Familientermin geplant.</p>
-            @endif
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                <div class="rounded-md bg-stone-50 p-3">
+                    <p class="text-sm text-stone-500">Termine heute</p>
+                    <p class="mt-1 text-2xl font-semibold">{{ $eventsToday->count() }}</p>
+                </div>
+                <div class="rounded-md bg-stone-50 p-3">
+                    <p class="text-sm text-stone-500">Termine morgen</p>
+                    <p class="mt-1 text-2xl font-semibold">{{ $eventsTomorrow->count() }}</p>
+                </div>
+                <div class="rounded-md bg-stone-50 p-3">
+                    <p class="text-sm text-stone-500">Diese Woche</p>
+                    <p class="mt-1 text-2xl font-semibold">{{ $eventsThisWeek->count() }}</p>
+                </div>
+                <div class="rounded-md bg-stone-50 p-3">
+                    <p class="text-sm text-stone-500">Offene Import-Vorschläge</p>
+                    <p class="mt-1 text-2xl font-semibold">{{ $openSuggestionsCount }}</p>
+                </div>
+            </div>
+
+            <div class="mt-6 border-t border-stone-100 pt-4">
+                <h2 class="text-lg font-semibold">Nächster Familientermin</h2>
+                @if($nextFamilyEvent)
+                    <p class="mt-4 font-medium">{{ $nextFamilyEvent->title }}</p>
+                    <p class="text-sm text-stone-600">{{ $nextFamilyEvent->dashboardDateLabel() }}</p>
+                @else
+                    <p class="mt-4 text-sm text-stone-500">Kein Familientermin geplant.</p>
+                @endif
+            </div>
+
             <div class="mt-6 border-t border-stone-100 pt-4">
                 <p class="text-sm text-stone-500">Geburtstage diesen Monat</p>
                 <p class="mt-1 text-2xl font-semibold">{{ $birthdaysThisMonthCount }}</p>
