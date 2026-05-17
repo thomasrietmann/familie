@@ -2,6 +2,21 @@
 @isset($event->id)
     @method('PUT')
 @endisset
+@php
+    $startValue = old('starts_at', $event->starts_at ? $event->starts_at->format('Y-m-d\TH:i') : '');
+    $endValue = old('ends_at', $event->ends_at ? $event->ends_at->format('Y-m-d\TH:i') : '');
+    $startDate = $startValue ? \Illuminate\Support\Str::before($startValue, 'T') : '';
+    $startTime = $startValue && str_contains($startValue, 'T') ? \Illuminate\Support\Str::after($startValue, 'T') : '08:00';
+    $endDate = $endValue ? \Illuminate\Support\Str::before($endValue, 'T') : '';
+    $endTime = $endValue && str_contains($endValue, 'T') ? \Illuminate\Support\Str::after($endValue, 'T') : '';
+    $timeOptions = [];
+
+    for ($hour = 0; $hour < 24; $hour++) {
+        foreach ([0, 15, 30, 45] as $minute) {
+            $timeOptions[] = sprintf('%02d:%02d', $hour, $minute);
+        }
+    }
+@endphp
 <div class="space-y-5">
     <div>
         <label class="text-sm font-medium" for="title">Titel</label>
@@ -35,18 +50,43 @@
         </div>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2">
-        <div>
-            <label class="text-sm font-medium" for="starts_at">Startdatum / Startzeit</label>
-            <input class="mt-1 block w-full rounded-md border-stone-300" id="starts_at" name="starts_at" type="datetime-local" value="{{ old('starts_at', $event->starts_at ? $event->starts_at->format('Y-m-d\TH:i') : '') }}" required>
-        </div>
-        <div>
-            <label class="text-sm font-medium" for="ends_at">Enddatum / Endzeit</label>
-            <input class="mt-1 block w-full rounded-md border-stone-300" id="ends_at" name="ends_at" type="datetime-local" value="{{ old('ends_at', $event->ends_at ? $event->ends_at->format('Y-m-d\TH:i') : '') }}">
-        </div>
-    </div>
+    <div class="space-y-3 rounded-md border border-stone-200 bg-white p-4" data-event-datetime>
+        <input id="starts_at" name="starts_at" type="hidden" value="{{ $startValue }}" data-starts-at>
+        <input id="ends_at" name="ends_at" type="hidden" value="{{ $endValue }}" data-ends-at>
 
-    <label class="flex items-center gap-2 text-sm text-stone-700"><input class="rounded border-stone-300" type="checkbox" name="all_day" value="1" @checked(old('all_day', $event->all_day))> Ganztägig</label>
+        <div class="grid gap-4 md:grid-cols-4">
+            <div class="md:col-span-2">
+                <label class="text-sm font-medium" for="start_date">Startdatum</label>
+                <input class="mt-1 block w-full rounded-md border-stone-300" id="start_date" type="date" value="{{ $startDate }}" required data-start-date>
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-sm font-medium" for="start_time">Startzeit</label>
+                <select class="mt-1 block w-full rounded-md border-stone-300" id="start_time" data-start-time>
+                    @foreach($timeOptions as $time)
+                        <option value="{{ $time }}" @selected($startTime === $time)>{{ $time }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-sm font-medium" for="end_date">Enddatum</label>
+                <input class="mt-1 block w-full rounded-md border-stone-300" id="end_date" type="date" value="{{ $endDate }}" data-end-date>
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-sm font-medium" for="end_time">Endzeit</label>
+                <select class="mt-1 block w-full rounded-md border-stone-300" id="end_time" data-end-time>
+                    <option value="">Keine Endzeit</option>
+                    @foreach($timeOptions as $time)
+                        <option value="{{ $time }}" @selected($endTime === $time)>{{ $time }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <label class="flex items-center gap-2 text-sm text-stone-700">
+            <input class="rounded border-stone-300" type="checkbox" name="all_day" value="1" @checked(old('all_day', $event->all_day)) data-all-day>
+            Ganztägig
+        </label>
+    </div>
 
     <div class="grid gap-4 md:grid-cols-3">
         <div>
