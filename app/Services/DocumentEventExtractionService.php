@@ -13,6 +13,14 @@ use ZipArchive;
 class DocumentEventExtractionService
 {
     private const IMAGE_FILE_TYPES = ['jpg', 'jpeg', 'png', 'webp', 'tif', 'tiff'];
+    private const IMAGE_MIME_TYPES = [
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'webp' => 'image/webp',
+        'tif' => 'image/tiff',
+        'tiff' => 'image/tiff',
+    ];
 
     public function extract(DocumentImport $documentImport): array
     {
@@ -91,12 +99,38 @@ PROMPT;
 
     private function userContent(DocumentImport $documentImport): array
     {
-        return [
+        $content = [
             [
                 'type' => 'input_text',
-                'text' => $this->contextText($documentImport)."\n\nExtrahierter Dokumenttext:\n".$this->documentText($documentImport),
+                'text' => $this->contextText($documentImport),
             ],
         ];
+
+        if ($documentImport->file_type === 'pdf') {
+            $content[] = [
+                'type' => 'input_file',
+                'filename' => $documentImport->original_filename,
+                'file_data' => 'data:application/pdf;base64,'.base64_encode($this->fileContents($documentImport)),
+            ];
+
+            return $content;
+        }
+
+        if (in_array($documentImport->file_type, self::IMAGE_FILE_TYPES, true)) {
+            $content[] = [
+                'type' => 'input_image',
+                'image_url' => $this->imageDataUrl($documentImport),
+            ];
+
+            return $content;
+        }
+
+        $content[] = [
+            'type' => 'input_text',
+            'text' => "DOCX-Inhalt:\n".$this->docxText($documentImport),
+        ];
+
+        return $content;
     }
 
     private function contextText(DocumentImport $documentImport): string
@@ -258,152 +292,6 @@ PROMPT;
         throw new RuntimeException('OpenAI Antwort enthält keinen Text.');
     }
 
-    private function documentText(DocumentImport $documentImport): string
-    {
-        $text = match ($documentImport->file_type) {
-            'pdf' => $this->pdfOcrText($documentImport),
-            'docx' => $this->docxText($documentImport),
-            default => in_array($documentImport->file_type, self::IMAGE_FILE_TYPES, true)
-                ? $this->imageOcrText($this->documentPath($documentImport))
-                : throw new RuntimeException('Dieser Dateityp wird nicht unterstützt.'),
-        };
-
-        $text = trim($text);
-
-        if ($text === '') {
-            throw new RuntimeException('Aus dem Dokument konnte kein Text extrahiert werden.');
-        }
-
-        return mb_substr($text, 0, 40000);
-    }
-
-    private function pdfOcrText(DocumentImport $documentImport): string
-    {
-        $this->ensureCommandAvailable('pdftoppm');
-        $this->ensureCommandAvailable('tesseract');
-
-        $workDir = storage_path('app/ocr/'.pathinfo($documentImport->file_path, PATHINFO_FILENAME).'-'.uniqid());
-
-        if (! is_dir($workDir) && ! mkdir($workDir, 0775, true) && ! is_dir($workDir)) {
-            throw new RuntimeException('OCR-Arbeitsverzeichnis konnte nicht erstellt werden.');
-        }
-
-        try {
-            $prefix = $workDir.'/page';
-
-            $this->runCommand([
-                config('services.ocr.pdftoppm_path', 'pdftoppm'),
-                '-r',
-                (string) config('services.ocr.pdf_dpi', 200),
-                '-png',
-                '-f',
-                '1',
-                '-l',
-                (string) config('services.ocr.pdf_max_pages', 10),
-                $this->documentPath($documentImport),
-                $prefix,
-            ]);
-
-            $pages = glob($prefix.'-*.png') ?: [];
-            sort($pages);
-
-            if ($pages === []) {
-                throw new RuntimeException('PDF konnte nicht in OCR-Seitenbilder umgewandelt werden.');
-            }
-
-            return collect($pages)
-                ->map(fn (string $page): string => $this->imageOcrText($page))
-                ->filter()
-                ->implode("\n\n");
-        } finally {
-            $this->deleteDirectory($workDir);
-        }
-    }
-
-    private function imageOcrText(string $path): string
-    {
-        $this->ensureCommandAvailable('tesseract');
-
-        return $this->runCommand([
-            config('services.ocr.tesseract_path', 'tesseract'),
-            $path,
-            'stdout',
-            '-l',
-            config('services.ocr.language', 'deu+eng'),
-        ]);
-    }
-
-    private function ensureCommandAvailable(string $name): void
-    {
-        if (! function_exists('proc_open')) {
-            throw new RuntimeException('proc_open ist auf dem Server deaktiviert. OCR kann Tesseract nicht starten.');
-        }
-
-        $command = $name === 'pdftoppm'
-            ? config('services.ocr.pdftoppm_path', 'pdftoppm')
-            : config('services.ocr.tesseract_path', 'tesseract');
-
-        if (blank($command)) {
-            throw new RuntimeException('OCR-Befehl '.$name.' ist nicht konfiguriert.');
-        }
-    }
-
-    private function runCommand(array $command): string
-    {
-        $process = proc_open($command, [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ], $pipes);
-
-        if (! is_resource($process)) {
-            throw new RuntimeException('OCR-Prozess konnte nicht gestartet werden.');
-        }
-
-        fclose($pipes[0]);
-        stream_set_blocking($pipes[1], false);
-        stream_set_blocking($pipes[2], false);
-
-        $stdout = '';
-        $stderr = '';
-        $startedAt = time();
-        $timeout = (int) config('services.ocr.timeout', 120);
-        $exitCode = null;
-
-        do {
-            $status = proc_get_status($process);
-            $stdout .= stream_get_contents($pipes[1]) ?: '';
-            $stderr .= stream_get_contents($pipes[2]) ?: '';
-
-            if (! $status['running']) {
-                $exitCode = $status['exitcode'];
-                break;
-            }
-
-            if ($timeout > 0 && time() - $startedAt > $timeout) {
-                proc_terminate($process);
-                $exitCode = 124;
-                $stderr .= 'OCR-Zeitlimit wurde überschritten.';
-                break;
-            }
-
-            usleep(100000);
-        } while (true);
-
-        $stdout .= stream_get_contents($pipes[1]) ?: '';
-        $stderr .= stream_get_contents($pipes[2]) ?: '';
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-
-        proc_close($process);
-
-        if ($exitCode !== 0) {
-            throw new RuntimeException('OCR-Befehl fehlgeschlagen: '.trim($stderr ?: 'Unbekannter Fehler'));
-        }
-
-        return trim($stdout ?: '');
-    }
-
     private function documentPath(DocumentImport $documentImport): string
     {
         $path = Storage::disk('public')->path($documentImport->file_path);
@@ -413,6 +301,24 @@ PROMPT;
         }
 
         return $path;
+    }
+
+    private function fileContents(DocumentImport $documentImport): string
+    {
+        $contents = file_get_contents($this->documentPath($documentImport));
+
+        if ($contents === false) {
+            throw new RuntimeException('Dokument konnte nicht gelesen werden.');
+        }
+
+        return $contents;
+    }
+
+    private function imageDataUrl(DocumentImport $documentImport): string
+    {
+        $mimeType = self::IMAGE_MIME_TYPES[$documentImport->file_type] ?? 'application/octet-stream';
+
+        return 'data:'.$mimeType.';base64,'.base64_encode($this->fileContents($documentImport));
     }
 
     private function docxText(DocumentImport $documentImport): string
@@ -438,18 +344,5 @@ PROMPT;
         $text = html_entity_decode(strip_tags(str_replace(['</w:p>', '</w:tr>'], "\n", $xml)));
 
         return trim(preg_replace('/\s+/', ' ', $text) ?? '');
-    }
-
-    private function deleteDirectory(string $directory): void
-    {
-        if (! is_dir($directory)) {
-            return;
-        }
-
-        foreach (glob($directory.'/*') ?: [] as $path) {
-            is_dir($path) ? $this->deleteDirectory($path) : @unlink($path);
-        }
-
-        @rmdir($directory);
     }
 }

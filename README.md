@@ -77,7 +77,7 @@ Beim Erfassen eines Termins wird direkt gewählt, für wen der Termin ist: ganze
 
 ## 8. Hinweise zum OpenAI Service
 
-`app/Services/DocumentEventExtractionService.php` nutzt zuerst lokale Textextraktion und danach die OpenAI Responses API mit Structured Outputs. PDFs und Bilder werden vor der OpenAI-Analyse mit Tesseract OCR gelesen. PDF-Seiten werden dafür mit `pdftoppm` in Bilder umgewandelt. DOCX-Dateien werden serverseitig ausgelesen und als Text analysiert.
+`app/Services/DocumentEventExtractionService.php` nutzt die OpenAI Responses API mit Structured Outputs. PDFs und Bilder werden direkt an OpenAI übergeben und dort gelesen. DOCX-Dateien werden serverseitig ausgelesen und als Text analysiert.
 
 In `.env` muss ein API-Key gesetzt sein:
 
@@ -85,15 +85,9 @@ In `.env` muss ein API-Key gesetzt sein:
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o-mini
 OPENAI_TIMEOUT=60
-TESSERACT_PATH=tesseract
-PDFTOPPM_PATH=pdftoppm
-TESSERACT_LANG=deu+eng
-OCR_TIMEOUT=120
-OCR_PDF_DPI=200
-OCR_PDF_MAX_PAGES=10
 ```
 
-Wenn OCR, DOCX-Extraktion oder die OpenAI-Analyse fehlschlägt, erhält der Dokumentimport den Status `failed` und die Fehlermeldung wird im Import gespeichert.
+Wenn DOCX-Extraktion oder die OpenAI-Analyse fehlschlägt, erhält der Dokumentimport den Status `failed` und die Fehlermeldung wird im Import gespeichert.
 
 ## 9. Secret Link Funktion
 
@@ -127,7 +121,6 @@ Uploads werden unter `storage/app/public/document-imports` gespeichert.
 - Führe `php artisan storage:link` aus oder lege den Symlink `public/storage -> ../storage/app/public` an.
 - Setze `APP_ENV=production`, `APP_DEBUG=false` und `APP_URL` auf deine echte Domain.
 - Für dieses MVP ist kein `npm install` und kein Vite-Build auf Metanet nötig.
-- Für PDF- und Bildanalyse müssen `tesseract` und `pdftoppm` auf dem Server verfügbar sein. Falls die Binaries an einem anderen Ort liegen, setze `TESSERACT_PATH` und `PDFTOPPM_PATH` in `.env`.
 
 ## 11. Nächste mögliche Features
 
@@ -144,7 +137,7 @@ Uploads werden unter `storage/app/public/document-imports` gespeichert.
 - Kommentare pro Termin
 - feinere Rollen und Berechtigungen
 - Queue-basierte Dokumentanalyse
-- Mehrseitige OCR im Hintergrund mit Fortschrittsanzeige
+- Optionale externe OCR-Integration
 - WhatsApp-kompatible Tagesübersicht
 - Public View mit optionalem Zeitraum
 - Familien-Checkliste
