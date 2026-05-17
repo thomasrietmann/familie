@@ -16,7 +16,7 @@
         @endif
     </div>
     <div class="space-y-4">
-        @foreach($documentImport->suggestions as $suggestion)
+        @forelse($documentImport->suggestions as $suggestion)
             <form method="POST" action="{{ route('imported-event-suggestions.update', $suggestion) }}" class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
                 @csrf
                 @method('PUT')
@@ -74,6 +74,10 @@
             </form>
             <form id="accept-{{ $suggestion->id }}" method="POST" action="{{ route('imported-event-suggestions.accept', $suggestion) }}">@csrf</form>
             <form id="reject-{{ $suggestion->id }}" method="POST" action="{{ route('imported-event-suggestions.reject', $suggestion) }}">@csrf</form>
-        @endforeach
+        @empty
+            <div class="rounded-lg border border-stone-200 bg-white p-6 text-sm text-stone-600 shadow-sm">
+                Keine offenen Import-Vorschläge mehr vorhanden.
+            </div>
+        @endforelse
     </div>
 </x-layouts.app>

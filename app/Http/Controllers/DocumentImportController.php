@@ -79,7 +79,11 @@ class DocumentImportController extends Controller
     public function review(DocumentImport $documentImport): View
     {
         $this->authorize('update', $documentImport);
-        $documentImport->load(['family.children', 'family.activeParents', 'suggestions' => fn ($query) => $query->orderBy('starts_at')]);
+        $documentImport->load([
+            'family.children',
+            'family.activeParents',
+            'suggestions' => fn ($query) => $query->where('status', 'pending')->orderBy('starts_at'),
+        ]);
 
         return view('document-imports.review', compact('documentImport'));
     }
