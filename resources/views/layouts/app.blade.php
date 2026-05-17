@@ -38,7 +38,6 @@
                         <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('families.index') }}">Einstellungen</a>
                         <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('families.events.index', $navFamily) }}">Termine</a>
                         <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('families.document-imports.index', $navFamily) }}">Dokumente / Import</a>
-                        <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('families.public-link.show', $navFamily) }}">Secret Link</a>
                     @else
                         <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('families.create') }}">Familie erstellen</a>
                     @endif
