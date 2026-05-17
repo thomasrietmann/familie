@@ -144,6 +144,13 @@ class FamilyEvent extends Model
         return MemberColorPalette::hex(null);
     }
 
+    public function dashboardDateLabel(): string
+    {
+        return $this->all_day
+            ? $this->starts_at->format('d.m.Y').' · Ganztägig'
+            : $this->starts_at->format('d.m.Y H:i');
+    }
+
     public function categoryLabel(): string
     {
         return self::CATEGORY_LABELS[$this->category] ?? $this->category;

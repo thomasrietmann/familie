@@ -35,7 +35,7 @@
                     <div class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <div class="flex items-center gap-2"><x-owner-dot :event="$event" /><a class="font-medium hover:underline" href="{{ route('families.events.show', [$event->family, $event]) }}">{{ $event->title }}</a></div>
-                            <p class="text-sm text-stone-600">{{ $event->starts_at->format('d.m.Y H:i') }} · {{ $event->ownerDisplayName() }}</p>
+                            <p class="text-sm text-stone-600">{{ $event->dashboardDateLabel() }} · {{ $event->ownerDisplayName() }}</p>
                         </div>
                         <x-badge>{{ $event->categoryLabel() }}</x-badge>
                     </div>
@@ -49,7 +49,7 @@
             <h2 class="text-lg font-semibold">Nächster Familientermin</h2>
             @if($nextFamilyEvent)
                 <p class="mt-4 font-medium">{{ $nextFamilyEvent->title }}</p>
-                <p class="text-sm text-stone-600">{{ $nextFamilyEvent->starts_at->format('d.m.Y H:i') }}</p>
+                <p class="text-sm text-stone-600">{{ $nextFamilyEvent->dashboardDateLabel() }}</p>
             @else
                 <p class="mt-4 text-sm text-stone-500">Kein Familientermin geplant.</p>
             @endif
@@ -68,7 +68,7 @@
                     @php($event = $nextEventPerChild[$child->id] ?? null)
                     <div class="rounded-md bg-stone-50 p-3">
                         <p class="font-medium">{{ $child->displayName() }}</p>
-                        <p class="text-sm text-stone-600">{{ $event ? $event->title.' · '.$event->starts_at->format('d.m.Y H:i').' · '.$event->ownerDisplayName() : 'Kein kommender Termin' }}</p>
+                        <p class="text-sm text-stone-600">{{ $event ? $event->title.' · '.$event->dashboardDateLabel().' · '.$event->ownerDisplayName() : 'Kein kommender Termin' }}</p>
                     </div>
                 @endforeach
             </div>
@@ -80,7 +80,7 @@
                     @php($event = $nextEventPerParent[$parent->id] ?? null)
                     <div class="rounded-md bg-stone-50 p-3">
                         <p class="font-medium">{{ $parent->name }}</p>
-                        <p class="text-sm text-stone-600">{{ $event ? $event->title.' · '.$event->starts_at->format('d.m.Y H:i').' · '.$event->ownerDisplayName() : 'Kein kommender Termin' }}</p>
+                        <p class="text-sm text-stone-600">{{ $event ? $event->title.' · '.$event->dashboardDateLabel().' · '.$event->ownerDisplayName() : 'Kein kommender Termin' }}</p>
                     </div>
                 @endforeach
             </div>
