@@ -11,9 +11,14 @@ body {
   background: #f6f7f4;
 }
 
-.status-dot {
+.owner-dot {
   display: inline-block;
   width: 0.65rem;
   height: 0.65rem;
   border-radius: 9999px;
+  flex: 0 0 auto;
+}
+
+.owner-dot-rainbow {
+  background: conic-gradient(#ef4444, #f59e0b, #eab308, #22c55e, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #ef4444);
 }

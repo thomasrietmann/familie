@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Thomas Rietmann',
             'email' => 'thomas@example.com',
             'password' => Hash::make('password'),
+            'member_color' => 'blue',
             'email_verified_at' => now(),
         ]);
 
@@ -27,6 +28,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Weiteres Elternteil',
             'email' => 'parent@example.com',
             'password' => Hash::make('password'),
+            'member_color' => 'rose',
             'email_verified_at' => now(),
         ]);
 
@@ -53,12 +55,14 @@ class DatabaseSeeder extends Seeder
             'family_id' => $family->id,
             'first_name' => 'Kind 1',
             'birthdate' => now()->subYears(8)->startOfMonth()->addDays(4),
+            'member_color' => 'teal',
         ]);
 
         $childTwo = Child::create([
             'family_id' => $family->id,
             'first_name' => 'Kind 2',
             'birthdate' => now()->subYears(5)->startOfMonth()->addDays(14),
+            'member_color' => 'amber',
         ]);
 
         $events = [

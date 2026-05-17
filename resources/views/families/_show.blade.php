@@ -40,6 +40,48 @@
         @endcan
     </x-card>
 
+    <x-card class="lg:col-span-2">
+        <h2 class="mb-4 text-lg font-semibold">Farben</h2>
+        <form method="POST" action="{{ route('families.member-colors.update', $family) }}" class="space-y-5">
+            @csrf
+            @php($colors = \App\Support\MemberColorPalette::options())
+            <div class="grid gap-4 lg:grid-cols-2">
+                @foreach($family->activeParents as $parent)
+                    <div class="rounded-md bg-stone-50 p-3">
+                        <p class="font-medium">{{ $parent->name }}</p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach($colors as $key => $hex)
+                                <label class="cursor-pointer">
+                                    <input class="peer sr-only" type="radio" name="parent_colors[{{ $parent->id }}]" value="{{ $key }}" @checked(old("parent_colors.{$parent->id}", $parent->member_color) === $key)>
+                                    <span class="block h-7 w-7 rounded-full border-2 border-white shadow-sm ring-1 ring-stone-200 peer-checked:ring-2 peer-checked:ring-stone-900" style="background-color: {{ $hex }}"></span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+
+                @foreach($family->children as $child)
+                    <div class="rounded-md bg-stone-50 p-3">
+                        <p class="font-medium">{{ $child->displayName() }}</p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach($colors as $key => $hex)
+                                <label class="cursor-pointer">
+                                    <input class="peer sr-only" type="radio" name="child_colors[{{ $child->id }}]" value="{{ $key }}" @checked(old("child_colors.{$child->id}", $child->member_color) === $key)>
+                                    <span class="block h-7 w-7 rounded-full border-2 border-white shadow-sm ring-1 ring-stone-200 peer-checked:ring-2 peer-checked:ring-stone-900" style="background-color: {{ $hex }}"></span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="owner-dot owner-dot-rainbow"></span>
+                <span class="text-sm text-stone-600">Familientermine werden als Regenbogen angezeigt.</span>
+            </div>
+            <button class="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white">Farben speichern</button>
+        </form>
+    </x-card>
+
     <x-card>
         <div class="mb-4 flex items-center justify-between">
             <h2 class="text-lg font-semibold">Kinder</h2>

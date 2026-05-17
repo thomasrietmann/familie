@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\InviteParentRequest;
+use App\Http\Requests\UpdateFamilyMemberColorsRequest;
+use App\Models\Child;
 use App\Models\Family;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -31,5 +33,20 @@ class FamilyParentController extends Controller
         ]);
 
         return back()->with('status', 'Elternteil wurde berechtigt.');
+    }
+
+    public function updateColors(UpdateFamilyMemberColorsRequest $request, Family $family): RedirectResponse
+    {
+        $data = $request->validated();
+
+        foreach ($data['parent_colors'] ?? [] as $parentId => $color) {
+            User::whereKey($parentId)->update(['member_color' => $color]);
+        }
+
+        foreach ($data['child_colors'] ?? [] as $childId => $color) {
+            Child::where('family_id', $family->id)->whereKey($childId)->update(['member_color' => $color]);
+        }
+
+        return back()->with('status', 'Farben wurden gespeichert.');
     }
 }

@@ -65,6 +65,8 @@ Ein Login verwaltet genau eine Familie. Jede Familie hat einen Owner. Aktive Elt
 
 Beim Erfassen eines Termins wird direkt gewählt, für wen der Termin ist: ganze Familie, Elternteil oder Kind. Dokument-Uploads haben dieselbe Auswahl, damit Import-Vorschläge bereits einer Familie oder Einzelperson zugeordnet werden können.
 
+In den Einstellungen kann für jedes Elternteil und jedes Kind eine von 20 festen Farben gewählt werden. Diese Farbe wird vor Terminen im privaten Dashboard, in der Terminübersicht und in den öffentlichen Secret-Link-Ansichten angezeigt. Familientermine erhalten einen Regenbogen-Punkt.
+
 ## 7. Dokument-Import Ablauf
 
 1. Familie auswählen

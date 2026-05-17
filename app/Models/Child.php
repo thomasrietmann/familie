@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\MemberColorPalette;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,7 @@ class Child extends Model
         'first_name',
         'last_name',
         'birthdate',
+        'member_color',
         'notes',
     ];
 
@@ -40,5 +42,10 @@ class Child extends Model
     public function displayName(): string
     {
         return trim($this->first_name.' '.($this->last_name ?? ''));
+    }
+
+    public function memberColorHex(): string
+    {
+        return MemberColorPalette::hex($this->member_color);
     }
 }

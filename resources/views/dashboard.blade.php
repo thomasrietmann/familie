@@ -34,7 +34,7 @@
                 @forelse($upcomingEvents as $event)
                     <div class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <div class="flex items-center gap-2"><span class="status-dot {{ $event->statusColor() }}"></span><a class="font-medium hover:underline" href="{{ route('families.events.show', [$event->family, $event]) }}">{{ $event->title }}</a></div>
+                            <div class="flex items-center gap-2"><x-owner-dot :event="$event" /><a class="font-medium hover:underline" href="{{ route('families.events.show', [$event->family, $event]) }}">{{ $event->title }}</a></div>
                             <p class="text-sm text-stone-600">{{ $event->starts_at->format('d.m.Y H:i') }} · {{ $event->ownerDisplayName() }}</p>
                         </div>
                         <x-badge>{{ $event->categoryLabel() }}</x-badge>

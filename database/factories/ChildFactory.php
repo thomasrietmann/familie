@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Family;
+use App\Support\MemberColorPalette;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ChildFactory extends Factory
@@ -14,6 +15,7 @@ class ChildFactory extends Factory
             'first_name' => fake()->firstName(),
             'last_name' => fake()->optional()->lastName(),
             'birthdate' => fake()->dateTimeBetween('-12 years', '-2 years'),
+            'member_color' => fake()->randomElement(MemberColorPalette::keys()),
             'notes' => null,
         ];
     }

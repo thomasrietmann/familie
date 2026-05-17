@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\MemberColorPalette;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -130,13 +131,17 @@ class FamilyEvent extends Model
         return $this->starts_at->greaterThanOrEqualTo(Carbon::today());
     }
 
-    public function statusColor(): string
+    public function ownerColorHex(): string
     {
-        return match ($this->status) {
-            'confirmed' => 'bg-emerald-500',
-            'cancelled' => 'bg-rose-500',
-            default => 'bg-amber-400',
-        };
+        if ($this->isForUser()) {
+            return User::find($this->owner_id)?->memberColorHex() ?? MemberColorPalette::hex(null);
+        }
+
+        if ($this->isForChild()) {
+            return Child::find($this->owner_id)?->memberColorHex() ?? MemberColorPalette::hex(null);
+        }
+
+        return MemberColorPalette::hex(null);
     }
 
     public function categoryLabel(): string

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\MemberColorPalette;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -16,6 +17,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'member_color',
     ];
 
     protected $hidden = [
@@ -54,5 +56,10 @@ class User extends Authenticatable
     public function hasManagedFamily(): bool
     {
         return $this->activeFamilies()->exists();
+    }
+
+    public function memberColorHex(): string
+    {
+        return MemberColorPalette::hex($this->member_color);
     }
 }
