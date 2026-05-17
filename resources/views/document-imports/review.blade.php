@@ -1,8 +1,19 @@
 <x-layouts.app title="Import prüfen">
     @php($family = $documentImport->family)
-    <div class="mb-6">
-        <h1 class="text-3xl font-semibold tracking-tight">Import-Vorschläge prüfen</h1>
-        <p class="mt-2 text-sm text-stone-600">{{ $documentImport->title }} · {{ $family->name }}</p>
+    @php($firstPendingSuggestion = $documentImport->suggestions->firstWhere('status', 'pending'))
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">Import-Vorschläge prüfen</h1>
+            <p class="mt-2 text-sm text-stone-600">{{ $documentImport->title }} · {{ $family->name }}</p>
+        </div>
+        @if($firstPendingSuggestion)
+            <form method="POST" action="{{ route('imported-event-suggestions.accept-all', $firstPendingSuggestion) }}">
+                @csrf
+                <button class="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white" type="submit">
+                    Alle offenen übernehmen
+                </button>
+            </form>
+        @endif
     </div>
     <div class="space-y-4">
         @foreach($documentImport->suggestions as $suggestion)

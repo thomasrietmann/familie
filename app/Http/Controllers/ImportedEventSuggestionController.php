@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateImportedEventSuggestionRequest;
+use App\Models\FamilyEvent;
 use App\Models\ImportedEventSuggestion;
 use Illuminate\Http\RedirectResponse;
 
@@ -19,6 +20,43 @@ class ImportedEventSuggestionController extends Controller
     {
         $this->authorize('update', $suggestion);
 
+        $event = $this->importSuggestion($suggestion);
+        $suggestion->documentImport->update(['status' => 'imported']);
+
+        return redirect()->route('families.events.show', [$suggestion->family, $event])->with('status', 'Vorschlag wurde importiert.');
+    }
+
+    public function acceptAll(ImportedEventSuggestion $suggestion): RedirectResponse
+    {
+        $this->authorize('update', $suggestion);
+
+        $documentImport = $suggestion->documentImport;
+        $pendingSuggestions = $documentImport->suggestions()
+            ->where('status', 'pending')
+            ->orderBy('starts_at')
+            ->get();
+
+        foreach ($pendingSuggestions as $pendingSuggestion) {
+            $this->importSuggestion($pendingSuggestion);
+        }
+
+        if ($pendingSuggestions->isNotEmpty()) {
+            $documentImport->update(['status' => 'imported']);
+        }
+
+        return back()->with('status', $pendingSuggestions->count().' Vorschläge wurden importiert.');
+    }
+
+    public function reject(ImportedEventSuggestion $suggestion): RedirectResponse
+    {
+        $this->authorize('update', $suggestion);
+        $suggestion->update(['status' => 'rejected']);
+
+        return back()->with('status', 'Vorschlag wurde abgelehnt.');
+    }
+
+    private function importSuggestion(ImportedEventSuggestion $suggestion): FamilyEvent
+    {
         $event = $suggestion->family->events()->create([
             'title' => $suggestion->title,
             'description' => $suggestion->description,
@@ -36,16 +74,7 @@ class ImportedEventSuggestionController extends Controller
         ]);
 
         $suggestion->update(['status' => 'imported']);
-        $suggestion->documentImport->update(['status' => 'imported']);
 
-        return redirect()->route('families.events.show', [$suggestion->family, $event])->with('status', 'Vorschlag wurde importiert.');
-    }
-
-    public function reject(ImportedEventSuggestion $suggestion): RedirectResponse
-    {
-        $this->authorize('update', $suggestion);
-        $suggestion->update(['status' => 'rejected']);
-
-        return back()->with('status', 'Vorschlag wurde abgelehnt.');
+        return $event;
     }
 }

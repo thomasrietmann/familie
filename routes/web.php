@@ -41,6 +41,7 @@ Route::middleware('auth')->scopeBindings()->group(function (): void {
     Route::get('/document-imports/{documentImport}/review', [DocumentImportController::class, 'review'])->name('document-imports.review');
     Route::put('/imported-event-suggestions/{suggestion}', [ImportedEventSuggestionController::class, 'update'])->name('imported-event-suggestions.update');
     Route::post('/imported-event-suggestions/{suggestion}/accept', [ImportedEventSuggestionController::class, 'accept'])->name('imported-event-suggestions.accept');
+    Route::post('/imported-event-suggestions/{suggestion}/accept-all', [ImportedEventSuggestionController::class, 'acceptAll'])->name('imported-event-suggestions.accept-all');
     Route::post('/imported-event-suggestions/{suggestion}/reject', [ImportedEventSuggestionController::class, 'reject'])->name('imported-event-suggestions.reject');
 
     Route::get('/families/{family}/public-link', [FamilyPublicLinkController::class, 'show'])->name('families.public-link.show');
