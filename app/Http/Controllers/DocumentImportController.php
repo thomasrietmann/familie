@@ -8,6 +8,7 @@ use App\Models\Family;
 use App\Services\DocumentEventExtractionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Throwable;
 
 class DocumentImportController extends Controller
 {
@@ -42,18 +43,29 @@ class DocumentImportController extends Controller
             'notes' => $request->validated('notes'),
         ] + $request->targetData());
 
-        $results = $service->extract($documentImport);
+        try {
+            $results = $service->extract($documentImport);
 
-        foreach ($results as $result) {
-            $documentImport->suggestions()->create($result + ['family_id' => $family->id, 'status' => 'pending']);
+            foreach ($results as $result) {
+                $documentImport->suggestions()->create($result + ['family_id' => $family->id, 'status' => 'pending']);
+            }
+
+            $documentImport->update([
+                'status' => 'analyzed',
+                'raw_ai_result' => $results,
+            ]);
+
+            return redirect()->route('document-imports.review', $documentImport)->with('status', 'Dokument wurde mit OpenAI analysiert.');
+        } catch (Throwable $exception) {
+            $documentImport->update([
+                'status' => 'failed',
+                'raw_ai_result' => ['error' => $exception->getMessage()],
+            ]);
+
+            return redirect()
+                ->route('families.document-imports.show', [$family, $documentImport])
+                ->withErrors(['document' => 'Die OpenAI Analyse ist fehlgeschlagen: '.$exception->getMessage()]);
         }
-
-        $documentImport->update([
-            'status' => 'analyzed',
-            'raw_ai_result' => $results,
-        ]);
-
-        return redirect()->route('document-imports.review', $documentImport)->with('status', 'Dokument wurde analysiert.');
     }
 
     public function show(Family $family, DocumentImport $documentImport): View

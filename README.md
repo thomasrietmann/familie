@@ -1,6 +1,6 @@
 # FamilyManager
 
-FamilyManager ist ein klassisches Laravel-MVC-MVP für eine persönliche Familien-Terminübersicht. Die App nutzt Blade, Tailwind CSS, MySQL und einen austauschbaren Mock-Service für Dokumentanalyse.
+FamilyManager ist ein klassisches Laravel-MVC-MVP für eine persönliche Familien-Terminübersicht. Die App nutzt Blade, Tailwind CSS, MySQL und OpenAI für die Dokumentanalyse.
 
 ## 1. Installation
 
@@ -28,6 +28,8 @@ DB_PORT=3306
 DB_DATABASE=metanet_db_name
 DB_USERNAME=metanet_db_user
 DB_PASSWORD=metanet_db_password
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
 ```
 
 Je nach Metanet-Setup kann `DB_HOST` statt `localhost` ein spezifischer MySQL-Host aus dem Control Panel sein.
@@ -73,9 +75,19 @@ Beim Erfassen eines Termins wird direkt gewählt, für wen der Termin ist: ganze
 6. Vorschläge prüfen, bearbeiten, übernehmen oder ablehnen
 7. Übernommene Vorschläge werden als `FamilyEvent` mit `source = import` gespeichert
 
-## 8. Hinweise zum AI Mock-Service
+## 8. Hinweise zum OpenAI Service
 
-`app/Services/DocumentEventExtractionService.php` erzeugt aktuell sinnvolle Beispieltermine. Die Klasse ist bewusst schmal gehalten, damit später OpenAI, echte PDF-Textextraktion oder DOCX-Textextraktion ergänzt werden können.
+`app/Services/DocumentEventExtractionService.php` nutzt die OpenAI Responses API mit Structured Outputs. PDFs werden als Dateiinput an OpenAI übergeben. DOCX-Dateien werden serverseitig ausgelesen und als Text analysiert.
+
+In `.env` muss ein API-Key gesetzt sein:
+
+```dotenv
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_TIMEOUT=60
+```
+
+Wenn die OpenAI-Analyse fehlschlägt oder kein API-Key gesetzt ist, erhält der Dokumentimport den Status `failed` und die Fehlermeldung wird im Import gespeichert.
 
 ## 9. Secret Link Funktion
 
@@ -124,9 +136,8 @@ Uploads werden unter `storage/app/public/document-imports` gespeichert.
 - Anhänge pro Termin
 - Kommentare pro Termin
 - feinere Rollen und Berechtigungen
-- Import echter PDF-Textextraktion
 - Import echter DOCX-Textextraktion
-- OpenAI Integration für Dokumentanalyse
+- Queue-basierte Dokumentanalyse
 - WhatsApp-kompatible Tagesübersicht
 - Public View mit optionalem Zeitraum
 - Familien-Checkliste
