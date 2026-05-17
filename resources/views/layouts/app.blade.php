@@ -13,10 +13,10 @@
 </head>
 <body class="min-h-screen text-stone-900 antialiased">
     <div class="border-b border-stone-200 bg-white">
-        <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between gap-4">
+        <div class="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:flex lg:items-center lg:justify-between lg:gap-8 lg:px-8">
+            <div class="flex items-center justify-between gap-4 lg:flex-none">
                 <a href="{{ route('dashboard') }}" class="flex w-fit items-center gap-3">
-                    <img src="{{ asset('images/familymanager-logo.png') }}" alt="FamilyManager" class="h-9 w-auto max-w-[220px] object-contain sm:max-w-[280px]">
+                    <img src="{{ asset('images/familymanager-logo.png') }}" alt="FamilyManager" class="h-10 w-auto max-w-[240px] object-contain sm:h-11 sm:max-w-[300px] lg:h-12 lg:max-w-[360px]">
                 </a>
                 @auth
                     <button class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-stone-300 text-stone-700 hover:bg-stone-100 lg:hidden" type="button" data-mobile-menu-button aria-controls="mobile-menu" aria-expanded="false">
@@ -31,7 +31,7 @@
                 @endauth
             </div>
             @auth
-                <nav id="mobile-menu" class="mt-4 hidden flex-col gap-1 text-sm lg:mt-0 lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:justify-end lg:gap-2" data-mobile-menu>
+                <nav id="mobile-menu" class="mt-4 hidden flex-col gap-1 text-sm lg:mt-0 lg:flex lg:flex-1 lg:flex-row lg:flex-wrap lg:items-center lg:justify-end lg:gap-2" data-mobile-menu>
                     <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('dashboard') }}">Dashboard</a>
                     @php($navFamily = auth()->user()->managedFamily())
                     @if($navFamily)
