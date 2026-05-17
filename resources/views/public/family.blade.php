@@ -21,7 +21,7 @@
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <p class="font-semibold">{{ $event->title }}</p>
-                                    <p class="text-sm text-stone-600">{{ $event->all_day ? 'Ganztägig' : $event->starts_at->format('H:i') }}</p>
+                                    <p class="text-sm text-stone-600">{{ $event->all_day ? 'Ganztägig' : $event->starts_at->format('H:i') }} · {{ $event->ownerDisplayName() }}</p>
                                 </div>
                                 <span class="inline-flex w-fit rounded-md bg-stone-100 px-2 py-1 text-xs font-medium text-stone-700">{{ $event->categoryLabel() }}</span>
                             </div>

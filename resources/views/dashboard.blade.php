@@ -35,7 +35,7 @@
                     <div class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <div class="flex items-center gap-2"><span class="status-dot {{ $event->statusColor() }}"></span><a class="font-medium hover:underline" href="{{ route('families.events.show', [$event->family, $event]) }}">{{ $event->title }}</a></div>
-                            <p class="text-sm text-stone-600">{{ $event->starts_at->format('d.m.Y H:i') }}</p>
+                            <p class="text-sm text-stone-600">{{ $event->starts_at->format('d.m.Y H:i') }} · {{ $event->ownerDisplayName() }}</p>
                         </div>
                         <x-badge>{{ $event->categoryLabel() }}</x-badge>
                     </div>
@@ -68,7 +68,7 @@
                     @php($event = $nextEventPerChild[$child->id] ?? null)
                     <div class="rounded-md bg-stone-50 p-3">
                         <p class="font-medium">{{ $child->displayName() }}</p>
-                        <p class="text-sm text-stone-600">{{ $event ? $event->title.' · '.$event->starts_at->format('d.m.Y H:i') : 'Kein kommender Termin' }}</p>
+                        <p class="text-sm text-stone-600">{{ $event ? $event->title.' · '.$event->starts_at->format('d.m.Y H:i').' · '.$event->ownerDisplayName() : 'Kein kommender Termin' }}</p>
                     </div>
                 @endforeach
             </div>
@@ -80,7 +80,7 @@
                     @php($event = $nextEventPerParent[$parent->id] ?? null)
                     <div class="rounded-md bg-stone-50 p-3">
                         <p class="font-medium">{{ $parent->name }}</p>
-                        <p class="text-sm text-stone-600">{{ $event ? $event->title.' · '.$event->starts_at->format('d.m.Y H:i') : 'Kein kommender Termin' }}</p>
+                        <p class="text-sm text-stone-600">{{ $event ? $event->title.' · '.$event->starts_at->format('d.m.Y H:i').' · '.$event->ownerDisplayName() : 'Kein kommender Termin' }}</p>
                     </div>
                 @endforeach
             </div>
