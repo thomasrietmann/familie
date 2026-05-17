@@ -62,12 +62,12 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $events = [
-            ['Familienausflug Zoo Zuerich', 'family_trip', 'family', null, 'confirmed', 'family', now()->addDays(3)->setTime(9, 0), 'Zoo Zuerich'],
+            ['Familienausflug Zoo Zuerich', 'excursion', 'family', null, 'confirmed', 'family', now()->addDays(3)->setTime(9, 0), 'Zoo Zuerich'],
             ['Kindergeburtstag Kind 1', 'birthday', 'child', $childOne->id, 'planned', 'family', now()->addDays(12)->setTime(14, 0), 'Zuhause'],
-            ['Spielnachmittag mit anderer Familie', 'playdate', 'family', null, 'planned', 'family', now()->addDays(5)->setTime(15, 0), 'Spielplatz'],
-            ['Arzttermin Kind 1', 'medical', 'child', $childOne->id, 'confirmed', 'parents_only', now()->addDays(2)->setTime(10, 30), 'Kinderarzt'],
-            ['Sportkurs Kind 2', 'sport', 'child', $childTwo->id, 'planned', 'family', now()->addDays(4)->setTime(17, 0), 'Turnhalle'],
-            ['Elternabend', 'school', 'user', $thomas->id, 'planned', 'family', now()->addDays(7)->setTime(19, 30), 'Schule'],
+            ['Spielnachmittag mit anderer Familie', 'other', 'family', null, 'planned', 'family', now()->addDays(5)->setTime(15, 0), 'Spielplatz'],
+            ['Arzttermin Kind 1', 'doctor', 'child', $childOne->id, 'confirmed', 'parents_only', now()->addDays(2)->setTime(10, 30), 'Kinderarzt'],
+            ['Sportkurs Kind 2', 'sports', 'child', $childTwo->id, 'planned', 'family', now()->addDays(4)->setTime(17, 0), 'Turnhalle'],
+            ['Elternabend', 'parent_evening', 'user', $thomas->id, 'planned', 'family', now()->addDays(7)->setTime(19, 30), 'Schule'],
             ['Familienfruehstueck morgen', 'other', 'family', null, 'confirmed', 'family', Carbon::tomorrow()->setTime(9, 0), 'Zuhause'],
         ];
 

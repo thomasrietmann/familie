@@ -12,28 +12,26 @@ class FamilyEvent extends Model
     use HasFactory;
 
     public const CATEGORIES = [
-        'family_trip',
-        'playdate',
-        'birthday',
         'school',
-        'childcare',
-        'medical',
-        'sport',
         'holiday',
-        'meeting',
+        'birthday',
+        'excursion',
+        'parent_evening',
+        'doctor',
+        'sports',
+        'deadline',
         'other',
     ];
 
     public const CATEGORY_LABELS = [
-        'family_trip' => 'Familienausflug',
-        'playdate' => 'Spieltermin',
-        'birthday' => 'Geburtstag',
         'school' => 'Schule',
-        'childcare' => 'Betreuung',
-        'medical' => 'Arzt / Gesundheit',
-        'sport' => 'Sport',
         'holiday' => 'Ferien / Feiertag',
-        'meeting' => 'Besprechung',
+        'birthday' => 'Geburtstag',
+        'excursion' => 'Ausflug',
+        'parent_evening' => 'Elternabend',
+        'doctor' => 'Arzt / Gesundheit',
+        'sports' => 'Sport',
+        'deadline' => 'Frist',
         'other' => 'Sonstiges',
     ];
 

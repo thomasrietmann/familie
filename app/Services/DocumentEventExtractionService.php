@@ -6,6 +6,7 @@ use App\Models\DocumentImport;
 use App\Models\FamilyEvent;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use ZipArchive;
@@ -47,12 +48,19 @@ class DocumentEventExtractionService
             throw new RuntimeException('OpenAI Antwort ist kein gültiges JSON.');
         }
 
+        Log::info('OpenAI document extraction raw response', [
+            'document_import_id' => $documentImport->id,
+            'response' => $raw,
+        ]);
+
         $content = $this->responseText($raw);
         $decoded = json_decode($content, true);
 
         if (! is_array($decoded) || ! isset($decoded['suggestions']) || ! is_array($decoded['suggestions'])) {
             throw new RuntimeException('OpenAI Antwort konnte nicht als Terminliste gelesen werden.');
         }
+
+        $this->validateDecodedResponse($decoded, $documentImport);
 
         return collect($decoded['suggestions'])
             ->map(fn (array $suggestion): ?array => $this->normalizeSuggestion($suggestion, $documentImport))
@@ -64,11 +72,17 @@ class DocumentEventExtractionService
     private function payload(DocumentImport $documentImport): array
     {
         return [
-            'model' => config('services.openai.model', 'gpt-4o-mini'),
+            'model' => config('services.openai.model', 'gpt-5.4'),
+            'temperature' => 0,
             'input' => [
                 [
                     'role' => 'system',
-                    'content' => $this->systemPrompt(),
+                    'content' => [
+                        [
+                            'type' => 'input_text',
+                            'text' => $this->systemPrompt(),
+                        ],
+                    ],
                 ],
                 [
                     'role' => 'user',
@@ -78,7 +92,7 @@ class DocumentEventExtractionService
             'text' => [
                 'format' => [
                     'type' => 'json_schema',
-                    'name' => 'family_event_suggestions',
+                    'name' => 'family_calendar_suggestions',
                     'strict' => true,
                     'schema' => $this->schema(),
                 ],
@@ -90,10 +104,18 @@ class DocumentEventExtractionService
     {
         return <<<'PROMPT'
 Du extrahierst Familien-Termine aus deutschsprachigen Dokumenten.
-Gib nur Termine zurück, die im Dokument plausibel als konkrete Termine, Fristen, Geburtstage, Ausflüge, Elternabende, Arzttermine, Sporttermine, Ferien oder Schultermine erkennbar sind.
-Nutze Europe/Zurich als Zeitzone. Wenn eine Uhrzeit fehlt, setze all_day auf true und nutze 00:00 als Startzeit.
-Verwende nur die vorgegebenen Kategorien. Wenn keine Kategorie passt, verwende other.
-Setze suggested_owner_type und suggested_owner_id auf die vorgegebene Zielperson, ausser das Dokument nennt eindeutig ein anderes Kind oder Elternteil aus dem Kontext.
+Analysiere das angehängte PDF/Bild direkt visuell. Verwende kein Markdown.
+Prüfe jede sichtbare Zeile separat und extrahiere alle sichtbaren Termine.
+Führe keine Termine zusammen. Wenn eine Zeile zwei Ereignisse enthält, erzeuge zwei separate Termine.
+Wenn eine Zeile nur Informationstext ohne konkreten Termin enthält, ignoriere sie.
+Nutze Europe/Zurich als Zeitzone.
+Wenn eine Uhrzeit fehlt: all_day=true und starts_at auf 00:00 setzen.
+Mehrtägige all_day-Termine müssen ends_at exklusiv setzen: letzter sichtbarer Tag + 1 Tag um 00:00.
+Verwende nur diese Kategorien: school, holiday, birthday, excursion, parent_evening, doctor, sports, deadline, other.
+Setze suggested_owner_type und suggested_owner_id standardmässig auf die vorgegebene Zielperson.
+Ändere suggested_owner_type und suggested_owner_id nur, wenn das Dokument eindeutig eine bekannte Person aus der Familie nennt.
+Geburtstage fremder Kinder oder fremder Personen nicht als Owner setzen; beim Standard-Ziel belassen.
+Gib exakt JSON im Format {"suggestions":[...]} zurück.
 PROMPT;
     }
 
@@ -148,12 +170,10 @@ PROMPT;
         return 'Heute ist '.Carbon::now('Europe/Zurich')->toDateString().'. '
             .'Familie: '.$family->name.'. '
             .'Dokumenttitel: '.$documentImport->title.'. '
-            .'Standard-Ziel: '.json_encode([
-                'type' => $documentImport->target_type ?? 'family',
-                'id' => $documentImport->target_id,
-            ], JSON_UNESCAPED_UNICODE).'. '
+            .'Standard-Ziel: '.json_encode($this->targetContext($documentImport), JSON_UNESCAPED_UNICODE).'. '
             .'Eltern: '.json_encode($parents, JSON_UNESCAPED_UNICODE).'. '
-            .'Kinder: '.json_encode($children, JSON_UNESCAPED_UNICODE).'.';
+            .'Kinder: '.json_encode($children, JSON_UNESCAPED_UNICODE).'. '
+            .'Extrahiere alle Termine aus dem angehängten Dokument.';
     }
 
     private function schema(): array
@@ -175,16 +195,12 @@ PROMPT;
                             'all_day' => ['type' => 'boolean'],
                             'location' => $this->nullableString(),
                             'category' => [
-                                'anyOf' => [
-                                    ['type' => 'string', 'enum' => FamilyEvent::CATEGORIES],
-                                    ['type' => 'null'],
-                                ],
+                                'type' => 'string',
+                                'enum' => FamilyEvent::CATEGORIES,
                             ],
                             'suggested_owner_type' => [
-                                'anyOf' => [
-                                    ['type' => 'string', 'enum' => ['family', 'user', 'child']],
-                                    ['type' => 'null'],
-                                ],
+                                'type' => 'string',
+                                'enum' => ['family', 'parent', 'child'],
                             ],
                             'suggested_owner_id' => [
                                 'anyOf' => [
@@ -239,7 +255,7 @@ PROMPT;
             return null;
         }
 
-        $ownerType = $suggestion['suggested_owner_type'] ?? $documentImport->target_type ?? 'family';
+        $ownerType = $this->ownerTypeForApp($suggestion['suggested_owner_type'] ?? null) ?? $documentImport->target_type ?? 'family';
         $ownerId = $suggestion['suggested_owner_id'] ?? $documentImport->target_id;
 
         if (! $this->validOwner($ownerType, $ownerId, $documentImport)) {
@@ -273,6 +289,88 @@ PROMPT;
             'child' => filled($ownerId) && $documentImport->family->children->contains('id', (int) $ownerId),
             default => false,
         };
+    }
+
+    private function targetContext(DocumentImport $documentImport): array
+    {
+        return [
+            'type' => $this->ownerTypeForModel($documentImport->target_type ?? 'family'),
+            'id' => $documentImport->target_id,
+            'name' => $documentImport->targetDisplayName(),
+        ];
+    }
+
+    private function ownerTypeForModel(?string $ownerType): string
+    {
+        return match ($ownerType) {
+            'user' => 'parent',
+            'child' => 'child',
+            default => 'family',
+        };
+    }
+
+    private function ownerTypeForApp(?string $ownerType): ?string
+    {
+        return match ($ownerType) {
+            'parent' => 'user',
+            'child' => 'child',
+            'family' => 'family',
+            default => null,
+        };
+    }
+
+    private function validateDecodedResponse(array $decoded, DocumentImport $documentImport): void
+    {
+        $errors = [];
+
+        foreach ($decoded['suggestions'] as $index => $suggestion) {
+            if (! is_array($suggestion)) {
+                $errors[] = "suggestions.$index ist kein Objekt.";
+                continue;
+            }
+
+            foreach (['title', 'description', 'starts_at', 'ends_at', 'all_day', 'location', 'category', 'suggested_owner_type', 'suggested_owner_id', 'confidence'] as $field) {
+                if (! array_key_exists($field, $suggestion)) {
+                    $errors[] = "suggestions.$index.$field fehlt.";
+                }
+            }
+
+            if (blank($suggestion['starts_at'] ?? null)) {
+                $errors[] = "suggestions.$index.starts_at darf nicht leer sein.";
+            }
+
+            if (($suggestion['all_day'] ?? false) === true && filled($suggestion['starts_at'] ?? null)) {
+                $startsAt = Carbon::parse($suggestion['starts_at'])->timezone('Europe/Zurich');
+
+                if ($startsAt->hour !== 0 || $startsAt->minute !== 0 || $startsAt->second !== 0) {
+                    $errors[] = "suggestions.$index.starts_at muss bei all_day=true auf 00:00 stehen.";
+                }
+            }
+
+            if (filled($suggestion['title'] ?? null) && preg_match('/\s+\/\s+/', $suggestion['title'])) {
+                $errors[] = "suggestions.$index.title wirkt kombiniert und muss als separate Events modelliert werden.";
+            }
+
+            if (! in_array($suggestion['category'] ?? null, FamilyEvent::CATEGORIES, true)) {
+                $errors[] = "suggestions.$index.category ist nicht erlaubt.";
+            }
+
+            if (! in_array($suggestion['suggested_owner_type'] ?? null, ['family', 'parent', 'child'], true)) {
+                $errors[] = "suggestions.$index.suggested_owner_type ist nicht erlaubt.";
+            }
+        }
+
+        if ($errors === []) {
+            return;
+        }
+
+        Log::warning('OpenAI document extraction validation failed', [
+            'document_import_id' => $documentImport->id,
+            'errors' => $errors,
+            'decoded' => $decoded,
+        ]);
+
+        throw new RuntimeException('OpenAI Antwort hat die Validierung nicht bestanden: '.implode(' ', $errors));
     }
 
     private function responseText(array $raw): string

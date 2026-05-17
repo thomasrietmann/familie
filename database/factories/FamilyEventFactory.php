@@ -17,7 +17,7 @@ class FamilyEventFactory extends Factory
             'ends_at' => null,
             'all_day' => false,
             'location' => fake()->optional()->city(),
-            'category' => fake()->randomElement(['family_trip', 'playdate', 'birthday', 'school', 'childcare', 'medical', 'sport', 'holiday', 'meeting', 'other']),
+            'category' => fake()->randomElement(['school', 'holiday', 'birthday', 'excursion', 'parent_evening', 'doctor', 'sports', 'deadline', 'other']),
             'visibility' => 'family',
             'owner_type' => 'family',
             'owner_id' => null,

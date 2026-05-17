@@ -23,7 +23,7 @@ class UpdateImportedEventSuggestionRequest extends FormRequest
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'all_day' => ['boolean'],
             'location' => ['nullable', 'string', 'max:255'],
-            'category' => ['nullable', 'in:family_trip,playdate,birthday,school,childcare,medical,sport,holiday,meeting,other'],
+            'category' => ['nullable', 'in:school,holiday,birthday,excursion,parent_evening,doctor,sports,deadline,other'],
             'owner_type' => ['required', 'in:family,user,child'],
             'owner_id' => ['nullable', 'integer'],
             'confidence' => ['nullable', 'numeric', 'between:0,1'],

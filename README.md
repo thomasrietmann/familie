@@ -29,7 +29,7 @@ DB_DATABASE=metanet_db_name
 DB_USERNAME=metanet_db_user
 DB_PASSWORD=metanet_db_password
 OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini
+OPENAI_MODEL=gpt-5.4
 ```
 
 Je nach Metanet-Setup kann `DB_HOST` statt `localhost` ein spezifischer MySQL-Host aus dem Control Panel sein.
@@ -83,11 +83,20 @@ In `.env` muss ein API-Key gesetzt sein:
 
 ```dotenv
 OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini
+OPENAI_MODEL=gpt-5.4
 OPENAI_TIMEOUT=60
 ```
 
 Wenn DOCX-Extraktion oder die OpenAI-Analyse fehlschlägt, erhält der Dokumentimport den Status `failed` und die Fehlermeldung wird im Import gespeichert.
+
+Für einen SDK-basierten TypeScript-Extractor liegt zusätzlich `resources/ai/familyCalendarExtractor.ts` bereit. Er lädt PDF/Bild-Dateien mit dem OpenAI SDK hoch, nutzt die Responses API mit `temperature: 0`, strict Structured Outputs und validiert die Rückgabe nach dem Modellaufruf.
+
+Lokaler Test nach Installation der Node-Abhängigkeiten:
+
+```bash
+npm install
+npm run extract:events -- /pfad/zum/dokument.pdf
+```
 
 ## 9. Secret Link Funktion
 

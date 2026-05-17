@@ -55,7 +55,7 @@ trait ValidatesEventOwner
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'all_day' => ['boolean'],
             'location' => ['nullable', 'string', 'max:255'],
-            'category' => ['required', 'in:family_trip,playdate,birthday,school,childcare,medical,sport,holiday,meeting,other'],
+            'category' => ['required', 'in:school,holiday,birthday,excursion,parent_evening,doctor,sports,deadline,other'],
             'visibility' => ['required', 'in:family,parents_only'],
             'owner_type' => ['required', 'in:family,user,child'],
             'owner_id' => ['nullable', 'integer'],
