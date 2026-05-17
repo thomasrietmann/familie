@@ -100,7 +100,7 @@ PROMPT;
             $content[] = [
                 'type' => 'input_file',
                 'filename' => $documentImport->original_filename,
-                'file_data' => base64_encode($this->fileContents($documentImport)),
+                'file_data' => 'data:application/pdf;base64,'.base64_encode($this->fileContents($documentImport)),
             ];
 
             return $content;
