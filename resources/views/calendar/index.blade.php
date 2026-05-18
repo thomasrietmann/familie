@@ -60,21 +60,20 @@
                                 </div>
                                 <div class="space-y-1.5">
                                     @foreach($day['events'] as $event)
-                                        @php
-                                            $calendarEvent = [
-                                                'title' => $event->title,
-                                                'time' => $event->dashboardTimeLabel(),
-                                                'date' => $event->starts_at->format('d.m.Y'),
-                                                'person' => $event->ownerDisplayName(),
-                                                'location' => $event->location,
-                                                'category' => $event->categoryLabel(),
-                                                'status' => $event->statusLabel(),
-                                                'visibility' => $event->visibilityLabel(),
-                                                'description' => $event->description,
-                                                'notes' => $event->notes,
-                                            ];
-                                        @endphp
-                                        <button class="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-xs hover:bg-stone-100" type="button" data-calendar-event='@json($calendarEvent)'>
+                                        <button
+                                            class="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-xs hover:bg-stone-100"
+                                            type="button"
+                                            data-calendar-event
+                                            data-calendar-title="{{ $event->title }}"
+                                            data-calendar-time="{{ $event->dashboardTimeLabel() }}"
+                                            data-calendar-date="{{ $event->starts_at->format('d.m.Y') }}"
+                                            data-calendar-person="{{ $event->ownerDisplayName() }}"
+                                            data-calendar-location="{{ $event->location }}"
+                                            data-calendar-category="{{ $event->categoryLabel() }}"
+                                            data-calendar-status="{{ $event->statusLabel() }}"
+                                            data-calendar-description="{{ $event->description }}"
+                                            data-calendar-notes="{{ $event->notes }}"
+                                        >
                                             <x-owner-dot :event="$event" />
                                             <span class="truncate font-medium text-stone-800">{{ $event->title }}</span>
                                         </button>
@@ -92,21 +91,20 @@
                         <h3 class="font-semibold {{ $day['is_today'] ? 'text-blue-700' : '' }}">{{ $day['date']->format('d.m.Y') }} - {{ $day['is_today'] ? 'heute' : $weekdays[$day['date']->dayOfWeekIso - 1] }}</h3>
                         <div class="mt-3 space-y-2">
                             @forelse($day['events'] as $event)
-                                @php
-                                    $calendarEvent = [
-                                        'title' => $event->title,
-                                        'time' => $event->dashboardTimeLabel(),
-                                        'date' => $event->starts_at->format('d.m.Y'),
-                                        'person' => $event->ownerDisplayName(),
-                                        'location' => $event->location,
-                                        'category' => $event->categoryLabel(),
-                                        'status' => $event->statusLabel(),
-                                        'visibility' => $event->visibilityLabel(),
-                                        'description' => $event->description,
-                                        'notes' => $event->notes,
-                                    ];
-                                @endphp
-                                <button class="flex w-full items-center gap-2 rounded-md bg-stone-50 p-3 text-left text-sm hover:bg-stone-100" type="button" data-calendar-event='@json($calendarEvent)'>
+                                <button
+                                    class="flex w-full items-center gap-2 rounded-md bg-stone-50 p-3 text-left text-sm hover:bg-stone-100"
+                                    type="button"
+                                    data-calendar-event
+                                    data-calendar-title="{{ $event->title }}"
+                                    data-calendar-time="{{ $event->dashboardTimeLabel() }}"
+                                    data-calendar-date="{{ $event->starts_at->format('d.m.Y') }}"
+                                    data-calendar-person="{{ $event->ownerDisplayName() }}"
+                                    data-calendar-location="{{ $event->location }}"
+                                    data-calendar-category="{{ $event->categoryLabel() }}"
+                                    data-calendar-status="{{ $event->statusLabel() }}"
+                                    data-calendar-description="{{ $event->description }}"
+                                    data-calendar-notes="{{ $event->notes }}"
+                                >
                                     <x-owner-dot :event="$event" />
                                     <span class="font-medium text-stone-800">{{ $event->title }}</span>
                                 </button>

@@ -83,17 +83,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('[data-calendar-event]').forEach((button) => {
             button.addEventListener('click', () => {
-                const event = JSON.parse(button.dataset.calendarEvent || '{}');
+                const event = button.dataset;
 
-                setText('title', event.title);
-                setText('date', event.date);
-                setText('time', event.time);
-                setText('person', event.person);
-                setText('category', event.category);
-                setText('status', event.status);
-                setText('location', event.location, 'Kein Ort hinterlegt.');
-                setText('description', event.description, 'Keine Beschreibung.');
-                setText('notes', event.notes, 'Keine Notizen.');
+                setText('title', event.calendarTitle);
+                setText('date', event.calendarDate);
+                setText('time', event.calendarTime);
+                setText('person', event.calendarPerson);
+                setText('category', event.calendarCategory);
+                setText('status', event.calendarStatus);
+                setText('location', event.calendarLocation, 'Kein Ort hinterlegt.');
+                setText('description', event.calendarDescription, 'Keine Beschreibung.');
+                setText('notes', event.calendarNotes, 'Keine Notizen.');
 
                 calendarModal.classList.remove('hidden');
                 calendarModal.classList.add('flex');

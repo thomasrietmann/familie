@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}?v=3">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <script defer src="{{ asset('js/app.js') }}"></script>
+    <script defer src="{{ asset('js/app.js') }}?v=4"></script>
 </head>
 <body class="min-h-screen text-stone-900 antialiased">
     <div class="border-b border-stone-200 bg-white">
