@@ -65,7 +65,8 @@ const systemPrompt = `
 Du extrahierst Familien-Termine aus deutschsprachigen Dokumenten.
 Analysiere das angehängte PDF/Bild direkt visuell. Verwende kein Markdown.
 Prüfe jede sichtbare Zeile separat und extrahiere alle sichtbaren Termine.
-Führe keine Termine zusammen. Wenn eine Zeile zwei Ereignisse enthält, erzeuge zwei separate Termine.
+Führe keine Termine zusammen. Wenn eine Zeile zwei unabhängige Ereignisse enthält, erzeuge zwei separate Termine.
+Zusammengehörige Ferien- oder Feiertagsbezeichnungen wie "Karfreitag / Ostern" bleiben ein einzelner mehrtägiger Termin.
 Wenn eine Zeile nur Informationstext ohne konkreten Termin enthält, ignoriere sie.
 Nutze Europe/Zurich als Zeitzone.
 Wenn eine Uhrzeit fehlt: all_day=true und starts_at auf 00:00 setzen.
@@ -273,7 +274,7 @@ function validateExtraction(value: unknown): string[] {
       errors.push(`suggestions.${index}.title ist leer.`);
     }
 
-    if (typeof suggestion.title === "string" && /\s+\/\s+/.test(suggestion.title)) {
+    if (typeof suggestion.title === "string" && looksLikeCombinedTitle(suggestion.title)) {
       errors.push(`suggestions.${index}.title wirkt kombiniert und muss getrennt werden.`);
     }
 
@@ -314,6 +315,27 @@ function validateExtraction(value: unknown): string[] {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function looksLikeCombinedTitle(title: string): boolean {
+  if (!/\s+\/\s+/.test(title)) {
+    return false;
+  }
+
+  const normalized = title.trim().toLowerCase();
+  const allowedCompoundTitles = ["karfreitag / ostern"];
+
+  if (allowedCompoundTitles.includes(normalized)) {
+    return false;
+  }
+
+  const holidayTerms = ["ferien", "feiertag", "ostern", "pfingsten", "weihnachten", "karfreitag"];
+
+  if (holidayTerms.some((term) => normalized.includes(term))) {
+    return false;
+  }
+
+  return true;
 }
 
 function isMidnight(value: string): boolean {

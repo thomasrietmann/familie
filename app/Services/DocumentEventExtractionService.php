@@ -106,7 +106,8 @@ class DocumentEventExtractionService
 Du extrahierst Familien-Termine aus deutschsprachigen Dokumenten.
 Analysiere das angehängte PDF/Bild direkt visuell. Verwende kein Markdown.
 Prüfe jede sichtbare Zeile separat und extrahiere alle sichtbaren Termine.
-Führe keine Termine zusammen. Wenn eine Zeile zwei Ereignisse enthält, erzeuge zwei separate Termine.
+Führe keine Termine zusammen. Wenn eine Zeile zwei unabhängige Ereignisse enthält, erzeuge zwei separate Termine.
+Zusammengehörige Ferien- oder Feiertagsbezeichnungen wie "Karfreitag / Ostern" bleiben ein einzelner mehrtägiger Termin.
 Wenn eine Zeile nur Informationstext ohne konkreten Termin enthält, ignoriere sie.
 Nutze Europe/Zurich als Zeitzone.
 Wenn eine Uhrzeit fehlt: all_day=true und starts_at auf 00:00 setzen.
@@ -347,7 +348,7 @@ PROMPT;
                 }
             }
 
-            if (filled($suggestion['title'] ?? null) && preg_match('/\s+\/\s+/', $suggestion['title'])) {
+            if (filled($suggestion['title'] ?? null) && $this->looksLikeCombinedTitle($suggestion['title'])) {
                 $errors[] = "suggestions.$index.title wirkt kombiniert und muss als separate Events modelliert werden.";
             }
 
@@ -371,6 +372,32 @@ PROMPT;
         ]);
 
         throw new RuntimeException('OpenAI Antwort hat die Validierung nicht bestanden: '.implode(' ', $errors));
+    }
+
+    private function looksLikeCombinedTitle(string $title): bool
+    {
+        if (! preg_match('/\s+\/\s+/', $title)) {
+            return false;
+        }
+
+        $normalized = mb_strtolower(trim($title));
+        $allowedCompoundTitles = [
+            'karfreitag / ostern',
+        ];
+
+        if (in_array($normalized, $allowedCompoundTitles, true)) {
+            return false;
+        }
+
+        $holidayTerms = ['ferien', 'feiertag', 'ostern', 'pfingsten', 'weihnachten', 'karfreitag'];
+
+        foreach ($holidayTerms as $term) {
+            if (str_contains($normalized, $term)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function responseText(array $raw): string
