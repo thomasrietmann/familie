@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ChildController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentImportController;
@@ -32,6 +33,7 @@ Route::get('/public/dashboard/{token}', [PublicDashboardController::class, 'show
 
 Route::middleware('auth')->scopeBindings()->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/calendar', CalendarController::class)->name('calendar');
 
     Route::resource('families', FamilyController::class);
     Route::resource('families.children', ChildController::class)->except(['show'])->parameters(['children' => 'child']);

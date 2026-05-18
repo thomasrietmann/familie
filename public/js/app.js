@@ -54,4 +54,62 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.closest('form')?.addEventListener('submit', syncDateTimeFields);
         syncDateTimeFields();
     });
+
+    const calendarModal = document.querySelector('[data-calendar-modal]');
+
+    if (calendarModal) {
+        const fields = {
+            title: calendarModal.querySelector('[data-calendar-modal-title]'),
+            date: calendarModal.querySelector('[data-calendar-modal-date]'),
+            time: calendarModal.querySelector('[data-calendar-modal-time]'),
+            person: calendarModal.querySelector('[data-calendar-modal-person]'),
+            category: calendarModal.querySelector('[data-calendar-modal-category]'),
+            status: calendarModal.querySelector('[data-calendar-modal-status]'),
+            location: calendarModal.querySelector('[data-calendar-modal-location]'),
+            description: calendarModal.querySelector('[data-calendar-modal-description]'),
+            notes: calendarModal.querySelector('[data-calendar-modal-notes]'),
+        };
+
+        const setText = (name, value, fallback = '-') => {
+            if (fields[name]) {
+                fields[name].textContent = value || fallback;
+            }
+        };
+
+        const closeModal = () => {
+            calendarModal.classList.add('hidden');
+            calendarModal.classList.remove('flex');
+        };
+
+        document.querySelectorAll('[data-calendar-event]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const event = JSON.parse(button.dataset.calendarEvent || '{}');
+
+                setText('title', event.title);
+                setText('date', event.date);
+                setText('time', event.time);
+                setText('person', event.person);
+                setText('category', event.category);
+                setText('status', event.status);
+                setText('location', event.location, 'Kein Ort hinterlegt.');
+                setText('description', event.description, 'Keine Beschreibung.');
+                setText('notes', event.notes, 'Keine Notizen.');
+
+                calendarModal.classList.remove('hidden');
+                calendarModal.classList.add('flex');
+            });
+        });
+
+        calendarModal.querySelector('[data-calendar-modal-close]')?.addEventListener('click', closeModal);
+        calendarModal.addEventListener('click', (event) => {
+            if (event.target === calendarModal) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    }
 });
