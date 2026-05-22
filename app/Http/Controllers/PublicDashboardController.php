@@ -19,13 +19,17 @@ class PublicDashboardController extends Controller
         $weekEnd = $today->copy()->addDays(6)->endOfDay();
         $events = $family->events()
             ->where('visibility', 'family')
-            ->whereBetween('starts_at', [$today, $weekEnd])
+            ->where('starts_at', '<=', $weekEnd)
+            ->where(function ($query) use ($today): void {
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>=', $today);
+            })
             ->orderBy('starts_at')
             ->get();
 
         return view('public.dashboard', [
-            'eventsToday' => $events->filter->isToday(),
-            'eventsTomorrow' => $events->filter->isTomorrow(),
+            'eventsToday' => $events->filter(fn (FamilyEvent $event) => $this->eventTouchesDate($event, $today))->values(),
+            'eventsTomorrow' => $events->filter(fn (FamilyEvent $event) => $this->eventTouchesDate($event, $today->copy()->addDay()))->values(),
             'eventsThisWeek' => $events,
             'upcomingEvents' => $events->take(8),
             'nextEvent' => $events->first(),
@@ -35,18 +39,30 @@ class PublicDashboardController extends Controller
 
     private function weekDays(Carbon $today, $events)
     {
-        $eventsByDate = $events->groupBy(fn (FamilyEvent $event) => $event->starts_at->toDateString());
-
-        return collect(range(0, 6))->map(function (int $offset) use ($today, $eventsByDate) {
+        return collect(range(0, 6))->map(function (int $offset) use ($today, $events) {
             $date = $today->copy()->addDays($offset);
 
             return [
                 'date' => $date,
                 'date_label' => $date->format('d.m.Y'),
                 'day_label' => $offset === 0 ? 'heute' : $this->weekdayLabel($date),
-                'events' => $eventsByDate->get($date->toDateString(), collect()),
+                'events' => $events->filter(fn (FamilyEvent $event) => $this->eventTouchesDate($event, $date))->values(),
             ];
         });
+    }
+
+    private function eventTouchesDate(FamilyEvent $event, Carbon $date): bool
+    {
+        $dayStart = $date->copy()->startOfDay();
+        $dayEnd = $date->copy()->endOfDay();
+        $eventStart = $event->starts_at->copy();
+        $eventEnd = $event->ends_at?->copy() ?? $eventStart->copy();
+
+        if ($event->all_day && $event->ends_at) {
+            $eventEnd->subSecond();
+        }
+
+        return $eventStart->lessThanOrEqualTo($dayEnd) && $eventEnd->greaterThanOrEqualTo($dayStart);
     }
 
     private function weekdayLabel(Carbon $date): string
