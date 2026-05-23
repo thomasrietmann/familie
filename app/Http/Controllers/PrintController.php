@@ -9,6 +9,8 @@ use Illuminate\View\View;
 
 class PrintController extends Controller
 {
+    private const EVENTS_PER_COLUMN = 36;
+
     public function __invoke(Request $request): View
     {
         $family = $request->user()->managedFamily();
@@ -17,6 +19,7 @@ class PrintController extends Controller
             return view('print.index', [
                 'family' => null,
                 'events' => collect(),
+                'eventColumns' => collect([collect(), collect()]),
             ]);
         }
 
@@ -34,10 +37,15 @@ class PrintController extends Controller
             ->get()
             ->sortBy(fn (FamilyEvent $event) => max($event->starts_at->timestamp, $today->timestamp))
             ->values();
+        $printEvents = $events->take(self::EVENTS_PER_COLUMN * 2);
 
         return view('print.index', [
             'family' => $family,
-            'events' => $events,
+            'events' => $printEvents,
+            'eventColumns' => collect([
+                $printEvents->take(self::EVENTS_PER_COLUMN),
+                $printEvents->slice(self::EVENTS_PER_COLUMN, self::EVENTS_PER_COLUMN)->values(),
+            ]),
         ]);
     }
 }

@@ -10,6 +10,11 @@
             color-scheme: light;
         }
 
+        * {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
         body {
             margin: 0;
             background: #f6f7f4;
@@ -98,18 +103,22 @@
         }
 
         .event-list {
-            column-count: 2;
-            column-gap: 8mm;
-            column-fill: auto;
-            font-size: 8pt;
+            display: grid;
+            gap: 8mm;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             height: 163mm;
+            overflow: hidden;
+        }
+
+        .event-column {
+            font-size: 8pt;
+            min-width: 0;
             overflow: hidden;
         }
 
         .event {
             break-inside: avoid;
             border-bottom: 1px solid #e7e5e4;
-            display: inline-block;
             margin: 0 0 2.2mm;
             padding: 0 0 1.8mm;
             width: 100%;
@@ -127,6 +136,8 @@
             height: 2.5mm;
             margin-top: 0.7mm;
             width: 2.5mm;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         .owner-dot-rainbow {
@@ -215,22 +226,26 @@
             <p class="empty">Keine kommenden Termine vorhanden.</p>
         @else
             <section class="event-list">
-                @foreach($events as $event)
-                    <article class="event">
-                        <div class="event-main">
-                            <x-owner-dot :event="$event" />
-                            <div>
-                                <div class="event-date">{{ $event->printDateLabel() }}</div>
-                                <div class="event-title">{{ $event->title }}</div>
-                                <div class="event-meta">
-                                    {{ $event->ownerDisplayName() }}
-                                    @if($event->location)
-                                        · {{ $event->location }}
-                                    @endif
+                @foreach($eventColumns as $column)
+                    <div class="event-column">
+                        @foreach($column as $event)
+                            <article class="event">
+                                <div class="event-main">
+                                    <x-owner-dot :event="$event" />
+                                    <div>
+                                        <div class="event-date">{{ $event->printDateLabel() }}</div>
+                                        <div class="event-title">{{ $event->title }}</div>
+                                        <div class="event-meta">
+                                            {{ $event->ownerDisplayName() }}
+                                            @if($event->location)
+                                                · {{ $event->location }}
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    </article>
+                            </article>
+                        @endforeach
+                    </div>
                 @endforeach
             </section>
         @endif
