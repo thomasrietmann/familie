@@ -104,8 +104,8 @@
 
         .event-list {
             display: grid;
-            gap: 8mm;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 5mm;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             height: 163mm;
             overflow: hidden;
         }

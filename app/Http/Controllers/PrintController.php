@@ -9,7 +9,8 @@ use Illuminate\View\View;
 
 class PrintController extends Controller
 {
-    private const EVENTS_PER_COLUMN = 36;
+    private const COLUMN_COUNT = 3;
+    private const EVENTS_PER_COLUMN = 30;
 
     public function __invoke(Request $request): View
     {
@@ -19,7 +20,7 @@ class PrintController extends Controller
             return view('print.index', [
                 'family' => null,
                 'events' => collect(),
-                'eventColumns' => collect([collect(), collect()]),
+                'eventColumns' => $this->emptyColumns(),
             ]);
         }
 
@@ -37,15 +38,25 @@ class PrintController extends Controller
             ->get()
             ->sortBy(fn (FamilyEvent $event) => max($event->starts_at->timestamp, $today->timestamp))
             ->values();
-        $printEvents = $events->take(self::EVENTS_PER_COLUMN * 2);
+        $printEvents = $events->take(self::EVENTS_PER_COLUMN * self::COLUMN_COUNT);
 
         return view('print.index', [
             'family' => $family,
             'events' => $printEvents,
-            'eventColumns' => collect([
-                $printEvents->take(self::EVENTS_PER_COLUMN),
-                $printEvents->slice(self::EVENTS_PER_COLUMN, self::EVENTS_PER_COLUMN)->values(),
-            ]),
+            'eventColumns' => $this->eventColumns($printEvents),
         ]);
+    }
+
+    private function eventColumns($events)
+    {
+        return collect(range(0, self::COLUMN_COUNT - 1))
+            ->map(fn (int $column) => $events
+                ->slice($column * self::EVENTS_PER_COLUMN, self::EVENTS_PER_COLUMN)
+                ->values());
+    }
+
+    private function emptyColumns()
+    {
+        return collect(range(1, self::COLUMN_COUNT))->map(fn () => collect());
     }
 }
