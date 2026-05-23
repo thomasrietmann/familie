@@ -21,13 +21,21 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            max-width: 297mm;
+            gap: 16px;
+            max-width: 277mm;
             margin: 0 auto;
             padding: 16px;
         }
 
+        .toolbar-hint {
+            color: #57534e;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
         .toolbar-actions {
             display: flex;
+            flex: 0 0 auto;
             gap: 8px;
         }
 
@@ -51,12 +59,12 @@
 
         .page {
             box-sizing: border-box;
-            width: 297mm;
-            height: 210mm;
+            width: 277mm;
+            height: 190mm;
             margin: 0 auto 24px;
             overflow: hidden;
             background: white;
-            padding: 12mm;
+            padding: 8mm;
             box-shadow: 0 16px 40px rgb(28 25 23 / 14%);
         }
 
@@ -65,13 +73,13 @@
             display: flex;
             align-items: end;
             justify-content: space-between;
-            gap: 12mm;
-            margin-bottom: 5mm;
-            padding-bottom: 4mm;
+            gap: 8mm;
+            margin-bottom: 3.5mm;
+            padding-bottom: 3mm;
         }
 
         .page-title {
-            font-size: 18pt;
+            font-size: 14pt;
             font-weight: 700;
             line-height: 1.1;
             margin: 0;
@@ -79,22 +87,22 @@
 
         .page-subtitle {
             color: #57534e;
-            font-size: 9pt;
-            margin: 2mm 0 0;
+            font-size: 8pt;
+            margin: 1.5mm 0 0;
         }
 
         .generated-at {
             color: #57534e;
-            font-size: 8pt;
+            font-size: 7.5pt;
             white-space: nowrap;
         }
 
         .event-list {
             column-count: 2;
-            column-gap: 10mm;
+            column-gap: 8mm;
             column-fill: auto;
-            font-size: 10pt;
-            height: 166mm;
+            font-size: 8pt;
+            height: 163mm;
             overflow: hidden;
         }
 
@@ -102,23 +110,23 @@
             break-inside: avoid;
             border-bottom: 1px solid #e7e5e4;
             display: inline-block;
-            margin: 0 0 3.2mm;
-            padding: 0 0 2.6mm;
+            margin: 0 0 2.2mm;
+            padding: 0 0 1.8mm;
             width: 100%;
         }
 
         .event-main {
             display: flex;
-            gap: 2.2mm;
+            gap: 1.8mm;
         }
 
         .owner-dot {
             border-radius: 9999px;
             display: inline-block;
             flex: 0 0 auto;
-            height: 3mm;
-            margin-top: 1mm;
-            width: 3mm;
+            height: 2.5mm;
+            margin-top: 0.7mm;
+            width: 2.5mm;
         }
 
         .owner-dot-rainbow {
@@ -127,35 +135,41 @@
 
         .event-date {
             color: #0f766e;
-            font-size: 8.5pt;
+            font-size: 7.5pt;
             font-weight: 700;
-            margin-bottom: 0.8mm;
+            margin-bottom: 0.5mm;
         }
 
         .event-title {
-            font-size: 10pt;
+            font-size: 8pt;
             font-weight: 700;
-            line-height: 1.2;
+            line-height: 1.15;
         }
 
         .event-meta {
             color: #57534e;
-            font-size: 8.5pt;
-            line-height: 1.3;
-            margin-top: 0.8mm;
+            font-size: 7.5pt;
+            line-height: 1.2;
+            margin-top: 0.5mm;
         }
 
         .empty {
             color: #57534e;
-            font-size: 10pt;
+            font-size: 8pt;
         }
 
         @page {
-            margin: 0;
-            size: A4 landscape;
+            margin: 10mm;
+            size: 297mm 210mm;
         }
 
         @media print {
+            html,
+            body {
+                height: 190mm;
+                width: 277mm;
+            }
+
             body {
                 background: white;
             }
@@ -167,6 +181,13 @@
             .page {
                 box-shadow: none;
                 margin: 0;
+                padding: 0;
+                height: 190mm;
+                width: 277mm;
+            }
+
+            .event-list {
+                height: 174mm;
             }
         }
     </style>
@@ -174,6 +195,7 @@
 <body>
     <div class="toolbar">
         <a class="button" href="{{ route('dashboard') }}">Zurück</a>
+        <div class="toolbar-hint">A4 Querformat. Im Druckdialog bei Bedarf Papierformat A4 und Ausrichtung Querformat wählen.</div>
         <div class="toolbar-actions">
             <a class="button" href="{{ route('calendar') }}">Kalender</a>
             <button class="button button-primary" type="button" onclick="window.print()">Drucken</button>
