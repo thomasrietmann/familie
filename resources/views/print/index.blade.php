@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Drucken</title>
+    <title>{{ $family?->name ?? 'Drucken' }}</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}?v=3" sizes="any">
     <style>
         :root {
@@ -116,6 +116,10 @@
             overflow: hidden;
         }
 
+        .event-column:nth-child(3) {
+            padding-left: 20px;
+        }
+
         .event {
             break-inside: avoid;
             border-bottom: 1px solid #e7e5e4;
@@ -216,7 +220,7 @@
     <main class="page">
         <header class="page-header">
             <div>
-                <h1 class="page-title">Drucken</h1>
+                <h1 class="page-title">{{ $family?->name ?? 'Drucken' }}</h1>
                 <p class="page-subtitle">{{ $family?->name ?? 'Noch keine Familie verbunden' }} · nächste Termine ab heute</p>
             </div>
             <p class="generated-at">{{ now('Europe/Zurich')->format('d.m.Y H:i') }}</p>
