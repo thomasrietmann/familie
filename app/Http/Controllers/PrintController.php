@@ -10,7 +10,7 @@ use Illuminate\View\View;
 class PrintController extends Controller
 {
     private const COLUMN_COUNT = 3;
-    private const EVENTS_PER_COLUMN = 30;
+    private const EVENTS_PER_COLUMN = 12;
 
     public function __invoke(Request $request): View
     {
