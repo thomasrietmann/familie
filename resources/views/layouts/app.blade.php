@@ -39,6 +39,7 @@
                         <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('calendar') }}">Kalender</a>
                         <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('families.events.index', $navFamily) }}">Termine</a>
                         <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('families.document-imports.index', $navFamily) }}">Dokumente / Import</a>
+                        <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('print') }}">Drucken</a>
                         <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('families.index') }}">Einstellungen</a>
                     @else
                         <a class="rounded-md px-3 py-2 hover:bg-stone-100" href="{{ route('families.create') }}">Familie erstellen</a>

@@ -11,6 +11,7 @@ use App\Http\Controllers\FamilyEventController;
 use App\Http\Controllers\FamilyParentController;
 use App\Http\Controllers\FamilyPublicLinkController;
 use App\Http\Controllers\ImportedEventSuggestionController;
+use App\Http\Controllers\PrintController;
 use App\Http\Controllers\PublicDashboardController;
 use App\Http\Controllers\PublicFamilyController;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,7 @@ Route::get('/public/dashboard/{token}', [PublicDashboardController::class, 'show
 Route::middleware('auth')->scopeBindings()->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/calendar', CalendarController::class)->name('calendar');
+    Route::get('/print', PrintController::class)->name('print');
 
     Route::resource('families', FamilyController::class);
     Route::resource('families.children', ChildController::class)->except(['show'])->parameters(['children' => 'child']);

@@ -164,6 +164,34 @@ class FamilyEvent extends Model
         return $this->starts_at->format('H:i');
     }
 
+    public function printDateLabel(): string
+    {
+        if ($this->all_day) {
+            if ($this->ends_at) {
+                $endsAtStartOfDay = $this->ends_at->hour === 0 && $this->ends_at->minute === 0 && $this->ends_at->second === 0;
+                $lastDay = $endsAtStartOfDay
+                    ? $this->ends_at->copy()->subDay()
+                    : $this->ends_at->copy();
+
+                if (! $lastDay->isSameDay($this->starts_at)) {
+                    return $this->starts_at->format('d.m.Y').' - '.$lastDay->format('d.m.Y');
+                }
+            }
+
+            return $this->starts_at->format('d.m.Y');
+        }
+
+        if ($this->ends_at && $this->ends_at->isSameDay($this->starts_at)) {
+            return $this->starts_at->format('d.m.Y H:i').' - '.$this->ends_at->format('H:i');
+        }
+
+        if ($this->ends_at) {
+            return $this->starts_at->format('d.m.Y H:i').' - '.$this->ends_at->format('d.m.Y H:i');
+        }
+
+        return $this->starts_at->format('d.m.Y H:i');
+    }
+
     public function categoryLabel(): string
     {
         return self::CATEGORY_LABELS[$this->category] ?? $this->category;
