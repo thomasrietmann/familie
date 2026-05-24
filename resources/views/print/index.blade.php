@@ -90,12 +90,6 @@
             margin: 0;
         }
 
-        .page-subtitle {
-            color: #57534e;
-            font-size: 8pt;
-            margin: 1.5mm 0 0;
-        }
-
         .generated-at {
             color: #57534e;
             font-size: 7.5pt;
@@ -221,7 +215,6 @@
         <header class="page-header">
             <div>
                 <h1 class="page-title">{{ $family?->name ?? 'Drucken' }}</h1>
-                <p class="page-subtitle">{{ $family?->name ?? 'Noch keine Familie verbunden' }} · nächste Termine ab heute</p>
             </div>
             <p class="generated-at">{{ now('Europe/Zurich')->format('d.m.Y H:i') }}</p>
         </header>
