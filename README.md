@@ -84,6 +84,8 @@ location ^~ /storage/document-imports/ { return 403; }
 
 Ohne angepasste nginx-Konfiguration die direkte statische Auslieferung dieses Pfades abschalten. Die mitgelieferte `public/.htaccess` sperrt ihn für Apache. Nach `documents:purge` sind vorhandene Originaldateien entfernt.
 
+Bei unterschiedlichen SSH-/Web-Pfaden wie `/familie.git` gegenüber `/home/httpd/vhosts/example.ch/familie.git` keinen Konfigurationscache über SSH erstellen: Er enthält absolute Pfade, die im Webprozess falsch sein können. Die folgenden Schritte verwenden deshalb `config:clear` und `view:clear`; kein `config:cache` oder `optimize` ausführen. Ein erfolgreicher CLI-Check ersetzt den Browser-Test nicht. Details und Abhilfe bei HTTP 500 stehen in der [Installationsanleitung](INSTALLATION.md#unterschiedliche-pfade-in-ssh-und-web-php).
+
 ## Bestehende Installation sicher aktualisieren
 
 1. Datenbank, `.env` und insbesondere den bestehenden `APP_KEY` sichern. Originaldateien werden nicht übernommen und gehören nicht in neue Sicherungen. Wartungsfenster einplanen. **Kein** `key:generate`, `migrate:fresh` oder Produktions-Seeding ausführen.
@@ -98,9 +100,9 @@ php artisan optimize:clear
 php artisan migrate --force
 php artisan documents:purge --dry-run
 php artisan documents:purge
-php artisan config:cache
+php artisan config:clear
 php artisan route:cache
-php artisan view:cache
+php artisan view:clear
 php artisan security:check
 ```
 

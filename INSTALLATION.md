@@ -38,6 +38,22 @@ git add resources public/build
 
 Weitere geänderte Dateien wie `package-lock.json` oder `vite.config.js` ebenfalls zum Commit hinzufügen. Quellen und generierten Build gemeinsam committen, danach `npm run build:check` ausführen. Dieser Befehl baut erneut und prüft geänderte, gelöschte sowie neue Dateien unter `public/build/`. Die CI führt dieselbe Prüfung aus und blockiert einen veralteten Build. Auch geänderte Laravel-Pagination-Views nach einem Composer-Update können einen neuen Build erfordern.
 
+## Unterschiedliche Pfade in SSH und Web-PHP
+
+Bei getrennten SSH-/Web-Pfadansichten sieht SSH die Anwendung beispielsweise unter `/familie.git`, Web-PHP dagegen unter `/home/httpd/vhosts/example.ch/familie.git`. Deshalb hier **keinen Konfigurationscache über SSH erzeugen**. `config:cache` speichert unter anderem absolute Pfade für Logs, Sessions, Datei-Cache, Views und Dateispeicher. Ein Cache aus der SSH-Umgebung kann im Webprozess unbrauchbar sein, obwohl `security:check` in der Shell erfolgreich ist.
+
+Diese Anleitung verwendet deshalb `config:clear` und `view:clear`. Web-PHP ermittelt die Pfade selbst und kompiliert benötigte Views beim Aufruf. `route:cache` kann weiter verwendet werden. Auch `php artisan optimize` vermeiden, da es wieder einen Konfigurationscache erzeugt. Konfigurationscaching erst verwenden, wenn SSH und Web-PHP nachweislich dieselben absoluten Anwendungspfade sehen und ein Browser-Test erfolgreich war.
+
+Falls bereits HTTP 500 mit einem falschen Logpfad auftritt, im App-Verzeichnis ausführen:
+
+```sh
+php artisan config:clear
+php artisan view:clear
+php artisan security:check
+```
+
+Danach die Seite neu laden und die neuesten Webserverfehler prüfen. Keine Verzeichnisse am falschen absoluten Pfad anlegen und keine pauschalen 777-Rechte setzen. Falls der falsche Pfad weiterhin auftaucht, Hosting-Umgebungsvariablen wie `APP_BASE_PATH`, `LARAVEL_STORAGE_PATH` und `VIEW_COMPILED_PATH` sowie den PHP-Prozess-/OPcache-Neustart im Hosting prüfen. Der Logfehler kann eine weitere ursprüngliche Ausnahme verdecken; nach seiner Behebung ist gegebenenfalls die neue Fehlermeldung erforderlich.
+
 ## 2. Neuinstallation
 
 Nur bei einer neuen Installation mit leerer Datenbank:
@@ -64,9 +80,9 @@ composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 php artisan key:generate --force
 php artisan migrate --force
 php artisan family:create-account
-php artisan config:cache
+php artisan config:clear
 php artisan route:cache
-php artisan view:cache
+php artisan view:clear
 php artisan security:check
 ```
 
@@ -127,9 +143,9 @@ php artisan optimize:clear
 php artisan migrate --force
 php artisan documents:purge --dry-run
 php artisan documents:purge
-php artisan config:cache
+php artisan config:clear
 php artisan route:cache
-php artisan view:cache
+php artisan view:clear
 php artisan security:check
 ```
 
@@ -180,7 +196,7 @@ Die Löschung betrifft lokale Serveroriginale. `store=false` verhindert keine un
 | Problem | Vorgehen |
 | --- | --- |
 | Frontend-Build fehlt oder wurde lokal verändert | Im Wartungsmodus lokale Build-Abweichungen sichern und `git restore --source=HEAD --staged --worktree -- public/build` ausführen; das stellt die versionierten Build-Dateien des aktuellen Commits wieder her |
-| CLI-Check grün, Browser meldet Fehler | Web-PHP-Version, Extensions, Schreibrechte, Domain und Proxy-Einstellungen vergleichen |
+| CLI-Check grün, Browser meldet Fehler | Zuerst unterschiedliche SSH-/Web-Pfade und einen aus SSH erzeugten Konfigurationscache prüfen (siehe oben); danach Web-PHP-Version, Extensions, Schreibrechte, Domain und Proxy-Einstellungen vergleichen |
 | Login nach Upgrade scheitert | Cookies entfernen und neu anmelden; `APP_KEY`, HTTPS-Domain, Sessionrechte und Argon2id prüfen |
 | Analyse fehlgeschlagen | API-Zugang, Modellfreigabe, Zeitlimits und zip-Erweiterung prüfen; Original erneut hochladen |
 | Alte Dokumentreste gemeldet | Statische Sperre beibehalten, `documents:purge` nach Behebung der Speicherfehler wiederholen |
