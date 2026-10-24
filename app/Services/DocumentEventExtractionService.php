@@ -109,6 +109,7 @@ Du extrahierst Familien-Termine aus deutschsprachigen Dokumenten.
 Analysiere das angehängte PDF/Bild direkt visuell. Verwende kein Markdown.
 Prüfe jede sichtbare Zeile separat und extrahiere alle sichtbaren Termine.
 Führe keine Termine zusammen. Wenn eine Zeile zwei unabhängige Ereignisse enthält, erzeuge zwei separate Termine.
+Ein Schrägstrich allein bedeutet nicht, dass es unabhängige Ereignisse sind. Bezeichnungen wie "Elternabend / Informationsabend" oder "Sporttag / Verschiebedatum" dürfen als Titel erhalten bleiben. Trenne nur anhand der Angaben im Dokument, ohne zusätzliche Termine oder Daten zu erfinden.
 Zusammengehörige Ferien- oder Feiertagsbezeichnungen wie "Karfreitag / Ostern" bleiben ein einzelner mehrtägiger Termin.
 Wenn eine Zeile nur Informationstext ohne konkreten Termin enthält, ignoriere sie.
 Nutze Europe/Zurich als Zeitzone.
@@ -363,10 +364,6 @@ PROMPT;
                 }
             }
 
-            if (filled($suggestion['title'] ?? null) && $this->looksLikeCombinedTitle($suggestion['title'])) {
-                $errors[] = "suggestions.$index.title wirkt kombiniert und muss als separate Events modelliert werden.";
-            }
-
             if (! in_array($suggestion['category'] ?? null, FamilyEvent::CATEGORIES, true)) {
                 $errors[] = "suggestions.$index.category ist nicht erlaubt.";
             }
@@ -386,32 +383,6 @@ PROMPT;
         ]);
 
         throw new RuntimeException('OpenAI Antwort hat die Validierung nicht bestanden: '.implode(' ', $errors));
-    }
-
-    private function looksLikeCombinedTitle(string $title): bool
-    {
-        if (! preg_match('/\s+\/\s+/', $title)) {
-            return false;
-        }
-
-        $normalized = mb_strtolower(trim($title));
-        $allowedCompoundTitles = [
-            'karfreitag / ostern',
-        ];
-
-        if (in_array($normalized, $allowedCompoundTitles, true)) {
-            return false;
-        }
-
-        $holidayTerms = ['ferien', 'feiertag', 'ostern', 'pfingsten', 'weihnachten', 'karfreitag'];
-
-        foreach ($holidayTerms as $term) {
-            if (str_contains($normalized, $term)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private function responseText(array $raw): string

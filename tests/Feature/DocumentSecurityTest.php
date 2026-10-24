@@ -207,6 +207,45 @@ class DocumentSecurityTest extends TestCase
         Log::shouldNotHaveReceived('info');
     }
 
+    public function test_slashes_in_titles_do_not_discard_the_upload_or_split_suggestions(): void
+    {
+        config(['services.openai.api_key' => 'test-only']);
+        $family = $this->familyFor();
+        $titles = array_merge(array_fill(0, 9, 'Schulanlass'), ['Elternabend / Informationsabend', 'Sporttag / Verschiebedatum']);
+        $suggestions = array_map(fn ($title) => [
+            'title' => $title, 'description' => null, 'starts_at' => '2026-11-01T19:00:00+01:00',
+            'ends_at' => null, 'all_day' => false, 'location' => null, 'category' => 'school',
+            'suggested_owner_type' => 'family', 'suggested_owner_id' => null, 'confidence' => 0.9,
+        ], $titles);
+        Http::fake(['api.openai.com/*' => Http::response(['output_text' => json_encode(['suggestions' => $suggestions])])]);
+        $file = UploadedFile::fake()->createWithContent('school.pdf', '%PDF-1.4 synthetic test');
+        $this->actingAs($family->owner)->post("/families/$family->id/document-imports", ['title' => 'School', 'document' => $file, 'target_type' => 'family', 'analysis_consent' => '1'])->assertSessionHasNoErrors()->assertRedirect();
+        $document = DocumentImport::sole();
+        $this->assertSame('analyzed', $document->status);
+        $this->assertSame($titles, $document->suggestions()->orderBy('id')->pluck('title')->all());
+        $this->assertSame(11, $document->suggestions()->where('status', 'pending')->count());
+        $this->assertDatabaseCount('family_events', 0);
+        $this->assertFileDoesNotExist($file->getPathname());
+        $this->assertNull($document->file_path);
+        $this->assertNull($document->raw_ai_result);
+        Http::assertSentCount(1);
+    }
+
+    public function test_slash_title_does_not_bypass_category_validation(): void
+    {
+        config(['services.openai.api_key' => 'test-only']);
+        $document = $this->documentFor($this->familyFor());
+        $file = UploadedFile::fake()->createWithContent('school.pdf', '%PDF-1.4 synthetic test');
+        Http::fake(['api.openai.com/*' => Http::response(['output_text' => json_encode(['suggestions' => [[
+            'title' => 'Elternabend / Informationsabend', 'description' => null, 'starts_at' => '2026-11-01T19:00:00+01:00',
+            'ends_at' => null, 'all_day' => false, 'location' => null, 'category' => 'invalid',
+            'suggested_owner_type' => 'family', 'suggested_owner_id' => null, 'confidence' => 0.9,
+        ]]])])]);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('category ist nicht erlaubt');
+        app(DocumentEventExtractionService::class)->extract($document, $file);
+    }
+
     public function test_malformed_ai_output_is_rejected(): void
     {
         config(['services.openai.api_key' => 'test-only']);

@@ -67,6 +67,7 @@ Du extrahierst Familien-Termine aus deutschsprachigen Dokumenten.
 Analysiere das angehängte PDF/Bild direkt visuell. Verwende kein Markdown.
 Prüfe jede sichtbare Zeile separat und extrahiere alle sichtbaren Termine.
 Führe keine Termine zusammen. Wenn eine Zeile zwei unabhängige Ereignisse enthält, erzeuge zwei separate Termine.
+Ein Schrägstrich allein bedeutet nicht, dass es unabhängige Ereignisse sind. Bezeichnungen wie "Elternabend / Informationsabend" oder "Sporttag / Verschiebedatum" dürfen als Titel erhalten bleiben. Trenne nur anhand der Angaben im Dokument, ohne zusätzliche Termine oder Daten zu erfinden.
 Zusammengehörige Ferien- oder Feiertagsbezeichnungen wie "Karfreitag / Ostern" bleiben ein einzelner mehrtägiger Termin.
 Wenn eine Zeile nur Informationstext ohne konkreten Termin enthält, ignoriere sie.
 Nutze Europe/Zurich als Zeitzone.
@@ -279,10 +280,6 @@ function validateExtraction(value: unknown): string[] {
       errors.push(`suggestions.${index}.title ist leer.`);
     }
 
-    if (typeof suggestion.title === "string" && looksLikeCombinedTitle(suggestion.title)) {
-      errors.push(`suggestions.${index}.title wirkt kombiniert und muss getrennt werden.`);
-    }
-
     if (typeof suggestion.starts_at !== "string" || suggestion.starts_at.trim() === "") {
       errors.push(`suggestions.${index}.starts_at darf nicht leer sein.`);
     }
@@ -320,27 +317,6 @@ function validateExtraction(value: unknown): string[] {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function looksLikeCombinedTitle(title: string): boolean {
-  if (!/\s+\/\s+/.test(title)) {
-    return false;
-  }
-
-  const normalized = title.trim().toLowerCase();
-  const allowedCompoundTitles = ["karfreitag / ostern"];
-
-  if (allowedCompoundTitles.includes(normalized)) {
-    return false;
-  }
-
-  const holidayTerms = ["ferien", "feiertag", "ostern", "pfingsten", "weihnachten", "karfreitag"];
-
-  if (holidayTerms.some((term) => normalized.includes(term))) {
-    return false;
-  }
-
-  return true;
 }
 
 function isMidnight(value: string): boolean {
