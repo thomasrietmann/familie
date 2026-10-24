@@ -26,7 +26,7 @@ php artisan family:create-account
 php artisan serve
 ```
 
-Alternativ `npm run dev` während der Frontend-Entwicklung starten. Im lokalen Modus ist die CSP für Vite/HMR ausgesetzt; Tests und Produktion verwenden die restriktive CSP. `npm run build` erzeugt versionierte Assets unter `public/build/`. Diesen Ordner beim Deployment mitliefern. Die bisherigen Dateien unter `public/css` und `public/js` und das Tailwind-CDN werden nicht mehr verwendet.
+Alternativ `npm run dev` während der Frontend-Entwicklung starten. Im lokalen Modus ist die CSP für Vite/HMR ausgesetzt; Tests und Produktion verwenden die restriktive CSP. `npm run build` erzeugt versionierte Assets unter `public/build/`. Dieser Ordner inklusive Manifest wird in Git versioniert und mit `git pull --ff-only` ausgeliefert. Nach Änderungen an Blade, CSS, JavaScript oder Build-Abhängigkeiten `npm run build` ausführen und `public/build/` zusammen mit den Quellen committen. Bei Änderungen an der Pagination kann auch ein Composer-Update einen neuen Build erfordern. Die CI führt `npm run build:check` aus und lehnt abweichende, fehlende oder zusätzliche Build-Dateien ab. Tailwind durchsucht dafür ausschliesslich die angegebenen Views, JavaScript-Dateien und Laravel-Pagination-Views, damit lokale Logs und andere Arbeitsdateien das Ergebnis nicht verändern. Die bisherigen Dateien unter `public/css` und `public/js` und das Tailwind-CDN werden nicht mehr verwendet.
 
 `php artisan db:seed` erzeugt ausschliesslich lokale Demo-Daten mit Testpasswörtern. Der Seeder verweigert die Ausführung in Produktion. Demo-Daten enthalten einen beispielhaften Dokumentdatensatz ohne Originaldatei und sind keine Produktionsdaten.
 
@@ -88,7 +88,7 @@ Ohne angepasste nginx-Konfiguration die direkte statische Auslieferung dieses Pf
 
 1. Datenbank, `.env` und insbesondere den bestehenden `APP_KEY` sichern. Originaldateien werden nicht übernommen und gehören nicht in neue Sicherungen. Wartungsfenster einplanen. **Kein** `key:generate`, `migrate:fresh` oder Produktions-Seeding ausführen.
 2. Alten öffentlichen Dokumentpfad auch auf Webserver-/nginx-Ebene sperren (siehe oben) und `php artisan down` ausführen. Laravel-Wartung allein sperrt keine statischen Dateien.
-3. Den geprüften Code inklusive `composer.lock`, `package-lock.json` und lokal/CI erzeugtem `public/build/` hochladen. Den laufenden Webroot auf `public/` belassen. Kein `public/hot` ausliefern.
+3. Den geprüften Stand mit `git pull --ff-only` holen; Code, Lockfiles und `public/build/` kommen gemeinsam aus Git. Bei Dateiübertragung den vollständigen Stand inklusive `public/build/` übertragen. Den laufenden Webroot auf `public/` belassen. Kein `public/hot` ausliefern.
 4. Die bestehende `.env` um die Produktionswerte ergänzen, `APP_KEY` behalten; PHP-Extensions und CLI-/Web-PHP-Version abgleichen.
 5. Im App-Verzeichnis ausführen:
 
@@ -126,6 +126,6 @@ composer audit
 npm audit
 ```
 
-Die Tests prüfen Authentifizierung, CSRF, Rate Limits, Familienisolation, Mass Assignment, HTML-Escaping, Freigaben, Header, Upload-Löschung bei Erfolg und Fehlern, Bereinigung alter Originale, KI-Fehlerfälle, Audit und transaktionale Importübernahme. Sie verwenden isolierte Datenbanken und simulierte externe Dienste. Die GitHub-Actions-Pipeline führt Tests mit PHP 8.3 und 8.4 sowie SQLite und MariaDB 10.6 aus und stellt den Frontend-Build bereit. Sie deployt nicht automatisch.
+Die Tests prüfen Authentifizierung, CSRF, Rate Limits, Familienisolation, Mass Assignment, HTML-Escaping, Freigaben, Header, Upload-Löschung bei Erfolg und Fehlern, Bereinigung alter Originale, KI-Fehlerfälle, Audit und transaktionale Importübernahme. Sie verwenden isolierte Datenbanken und simulierte externe Dienste. Die GitHub-Actions-Pipeline führt Tests mit PHP 8.3 und 8.4 sowie SQLite und MariaDB 10.6 aus und prüft, dass ein frischer Frontend-Build exakt dem eingecheckten Stand entspricht. Sie deployt nicht automatisch.
 
 Für Aufbewahrung regelmässig `php artisan audit:prune` ausführen (z. B. täglich per Plesk-Aufgabe); Standard 180 Tage, konfigurierbar mit `AUDIT_RETENTION_DAYS`, mindestens 30 Tage. Datenbank und Schlüssel sichern und Wiederherstellung testen. Der Audit-Log ist kein gegen Datenbankadministratoren manipulationssicheres Archiv. Weitere Grenzen stehen in [SECURITY.md](SECURITY.md).

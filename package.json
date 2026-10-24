@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:check": "npm run build && node scripts/check-frontend-build.mjs",
     "test": "tsx --test tests/ai/*.test.ts",
     "typecheck": "tsc --noEmit",
     "extract:events": "tsx resources/ai/familyCalendarExtractor.ts"

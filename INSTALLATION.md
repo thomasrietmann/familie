@@ -12,18 +12,31 @@ Diese Anleitung beschreibt das manuelle Deployment. Ein GitHub-Push startet die 
 - PHP: `upload_max_filesize=10M`, `post_max_size=12M`, empfohlen `memory_limit=256M`. PHP-/Proxy-Zeitlimits müssen die synchrone KI-Analyse erlauben; `OPENAI_TIMEOUT` ist maximal 90 Sekunden.
 - Das PHP-Upload-Temporärverzeichnis muss privat sein, von Backups ausgeschlossen werden und eine Hosting-Bereinigung für liegengebliebene Dateien nach Prozessabbrüchen haben.
 
-Frontend auf dem Entwicklungsrechner mit Node.js 24 bauen:
+Der Frontend-Build ist im Repository enthalten. Auf dem Server genügt für eine neue Installation:
 
 ```sh
 git clone git@github.com:thomasrietmann/familie.git
 cd familie
-npm ci --ignore-scripts
-npm run build
 ```
 
-Für ein bereits vorhandenes, sauberes Checkout statt erneutem Klonen `git pull --ff-only` verwenden. Den verwendeten Commit mit `git rev-parse HEAD` festhalten. Alternativ das Artefakt `frontend-build` eines erfolgreichen GitHub-Actions-Laufs **desselben Commits** herunterladen.
+Für ein bereits vorhandenes, sauberes Checkout `git pull --ff-only` verwenden. Den verwendeten Commit mit `git rev-parse HEAD` festhalten. Code, Manifest und CSS-/JavaScript-Dateien werden gemeinsam geliefert; ein separater Build-Upload ist nicht mehr erforderlich. Node.js und npm werden auf dem Server nicht gebraucht.
 
-Code und den gesamten Ordner `public/build/` auf den Server übertragen. `public/build/manifest.json` und seine referenzierten Dateien müssen vorhanden sein. Ein Git-Pull allein liefert den Build nicht, da er nicht in Git gespeichert wird. Bei einem CI-Artefakt den Inhalt nach `public/build/` entpacken. `node_modules/`, lokale `.env`, Testsitzungen, Logs und `public/hot` nicht hochladen. Node.js wird auf dem Server nicht gebraucht.
+Bei einer Installation per SFTP den vollständigen Repository-Stand einschliesslich `public/build/` übertragen. `public/build/manifest.json` und seine referenzierten Dateien müssen vorhanden sein. `node_modules/`, lokale `.env`, Testsitzungen, Logs und `public/hot` nicht hochladen.
+
+Beim ersten Wechsel auf eingecheckte Builds können bereits manuell hochgeladene Dateien einen Git-Pull blockieren. Nur wenn Git eine solche Kollision unter `public/build/` meldet: den bisherigen Build-Ordner im Wartungsmodus ausserhalb des App-Verzeichnisses sichern/verschieben und `git pull --ff-only` erneut ausführen. Nicht mit einem pauschalen `git reset --hard` oder `git clean` lokale Konfiguration und Nutzerdaten entfernen.
+
+### Frontend-Änderungen entwickeln
+
+Nur auf dem Entwicklungsrechner oder in CI, mit Node.js 24 und installierten Composer-Abhängigkeiten:
+
+```sh
+composer install
+npm ci --ignore-scripts
+npm run build
+git add resources public/build
+```
+
+Weitere geänderte Dateien wie `package-lock.json` oder `vite.config.js` ebenfalls zum Commit hinzufügen. Quellen und generierten Build gemeinsam committen, danach `npm run build:check` ausführen. Dieser Befehl baut erneut und prüft geänderte, gelöschte sowie neue Dateien unter `public/build/`. Die CI führt dieselbe Prüfung aus und blockiert einen veralteten Build. Auch geänderte Laravel-Pagination-Views nach einem Composer-Update können einen neuen Build erfordern.
 
 ## 2. Neuinstallation
 
@@ -79,7 +92,7 @@ Familien, Accounts, Kalendertermine und Importvorschläge bleiben erhalten. Orig
    php artisan down
    ```
 
-4. Neuen Code samt Lockfiles und passendem `public/build/` übertragen. Bei einem sauberen Server-Git-Checkout kann der Code mit `git pull --ff-only` aktualisiert werden. Bestehende `.env` und `storage/` erhalten. Ein eventuell vorhandenes `public/hot` entfernen. Alte `public/css/app.css` und `public/js/app.js` werden nicht mehr verwendet und können entfernt werden.
+4. Bei einem sauberen Server-Git-Checkout `git pull --ff-only` ausführen. Das aktualisiert den Code samt Lockfiles und dem passenden `public/build/` gemeinsam. Bei SFTP stattdessen den vollständigen Repository-Stand übertragen. Bestehende `.env` und `storage/` erhalten. Ein eventuell vorhandenes `public/hot` entfernen. Alte `public/css/app.css` und `public/js/app.js` werden nicht mehr verwendet und können entfernt werden.
 5. Bestehende `.env` anhand von `.env.metanet.example` ergänzen. **Den bestehenden `APP_KEY` behalten; weder `key:generate` noch `migrate:fresh` ausführen.** `APP_URL` muss die echte Domain enthalten.
 
 Besonders prüfen:
@@ -166,7 +179,7 @@ Die Löschung betrifft lokale Serveroriginale. `store=false` verhindert keine un
 
 | Problem | Vorgehen |
 | --- | --- |
-| Frontend-Build fehlt | `public/build/` vom richtigen Commit samt Manifest und Assets übertragen |
+| Frontend-Build fehlt oder wurde lokal verändert | Im Wartungsmodus lokale Build-Abweichungen sichern und `git restore --source=HEAD --staged --worktree -- public/build` ausführen; das stellt die versionierten Build-Dateien des aktuellen Commits wieder her |
 | CLI-Check grün, Browser meldet Fehler | Web-PHP-Version, Extensions, Schreibrechte, Domain und Proxy-Einstellungen vergleichen |
 | Login nach Upgrade scheitert | Cookies entfernen und neu anmelden; `APP_KEY`, HTTPS-Domain, Sessionrechte und Argon2id prüfen |
 | Analyse fehlgeschlagen | API-Zugang, Modellfreigabe, Zeitlimits und zip-Erweiterung prüfen; Original erneut hochladen |
