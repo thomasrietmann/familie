@@ -6,8 +6,15 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            'serve' => false,
             'throw' => false,
+        ],
+        // Kept only for removing legacy originals with documents:purge. New uploads are request-local.
+        'documents' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/documents'),
+            'visibility' => 'private',
+            'throw' => true,
         ],
         'public' => [
             'driver' => 'local',

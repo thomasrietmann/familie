@@ -9,6 +9,7 @@ use App\Models\FamilyEvent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class FamilyEventController extends Controller
@@ -16,6 +17,7 @@ class FamilyEventController extends Controller
     public function index(Request $request, Family $family): View
     {
         $this->authorize('view', $family);
+        $request->validate(['category' => ['nullable', 'string', 'in:'.implode(',', FamilyEvent::CATEGORIES)], 'status' => ['nullable', 'in:planned,confirmed,cancelled'], 'visibility' => ['nullable', 'in:family,parents_only'], 'from' => ['nullable', 'date'], 'to' => ['nullable', 'date']]);
 
         $events = $family->events()
             ->when($request->filled('category'), fn ($query) => $query->where('category', $request->category))
@@ -43,7 +45,7 @@ class FamilyEventController extends Controller
 
     public function store(StoreFamilyEventRequest $request, Family $family): RedirectResponse
     {
-        $event = $family->events()->create($request->eventData() + ['source' => 'manual']);
+        $event = DB::transaction(fn () => $family->events()->create($request->eventData() + ['source' => 'manual']));
 
         return redirect()->route('families.events.show', [$family, $event])->with('status', 'Termin wurde erstellt.');
     }
@@ -65,7 +67,7 @@ class FamilyEventController extends Controller
 
     public function update(UpdateFamilyEventRequest $request, Family $family, FamilyEvent $event): RedirectResponse
     {
-        $event->update($request->eventData());
+        DB::transaction(fn () => $event->update($request->eventData()));
 
         return redirect()->route('families.events.show', [$family, $event])->with('status', 'Termin wurde aktualisiert.');
     }
@@ -73,7 +75,7 @@ class FamilyEventController extends Controller
     public function destroy(Family $family, FamilyEvent $event): RedirectResponse
     {
         $this->authorize('delete', $event);
-        $event->delete();
+        DB::transaction(fn () => $event->delete());
 
         return redirect()->route('families.events.index', $family)->with('status', 'Termin wurde gelöscht.');
     }

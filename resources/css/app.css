@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/forms";
+
 
 @source "../views";
 
@@ -21,4 +21,10 @@ body {
 
 .owner-dot-rainbow {
   background: conic-gradient(#ef4444, #f59e0b, #eab308, #22c55e, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #ef4444);
+}
+
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
+@layer base {
+ input:not([type=checkbox]):not([type=radio]):not([type=hidden]), select, textarea { border-width: 1px; padding: 0.5rem 0.75rem; background-color: white; }
+ :focus-visible { outline: 2px solid #57534e; outline-offset: 2px; }
 }

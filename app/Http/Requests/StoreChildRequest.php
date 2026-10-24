@@ -20,7 +20,7 @@ class StoreChildRequest extends FormRequest
             'last_name' => ['nullable', 'string', 'max:255'],
             'birthdate' => ['nullable', 'date'],
             'member_color' => ['nullable', Rule::in(MemberColorPalette::keys())],
-            'notes' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string', 'max:10000'],
         ];
     }
 }

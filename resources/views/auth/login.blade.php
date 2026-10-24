@@ -3,7 +3,6 @@
         <div class="mb-8 text-center">
             <img src="{{ asset('images/familymanager-logo.png') }}" alt="FamilyManager" class="mx-auto h-16 w-auto max-w-full object-contain">
             <h1 class="mt-6 text-3xl font-semibold tracking-tight">Anmelden</h1>
-            <p class="mt-2 text-sm text-stone-600">Test-Login: thomas@example.com / password</p>
         </div>
         <form method="POST" action="{{ route('login') }}" class="space-y-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
             @csrf
@@ -21,9 +20,11 @@
             </label>
             <button class="w-full rounded-md bg-stone-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-stone-700" type="submit">Login</button>
         </form>
+        @if(config('security.registration_enabled'))
         <p class="mt-5 text-center text-sm text-stone-600">
             Noch kein Account?
             <a class="font-medium text-stone-900 hover:underline" href="{{ route('register') }}">Registrieren</a>
         </p>
+        @endif
     </div>
 </x-layouts.app>

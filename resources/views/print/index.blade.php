@@ -200,6 +200,7 @@
             }
         }
     </style>
+    @vite('resources/js/app.js')
 </head>
 <body>
     <div class="toolbar">
@@ -207,7 +208,7 @@
         <div class="toolbar-hint">A4 Querformat. Im Druckdialog bei Bedarf Papierformat A4 und Ausrichtung Querformat wählen.</div>
         <div class="toolbar-actions">
             <a class="button" href="{{ route('calendar') }}">Kalender</a>
-            <button class="button button-primary" type="button" onclick="window.print()">Drucken</button>
+            <button class="button button-primary" type="button" data-print>Drucken</button>
         </div>
     </div>
 

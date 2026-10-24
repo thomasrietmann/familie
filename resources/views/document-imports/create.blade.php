@@ -42,6 +42,8 @@
                 <label class="text-sm font-medium" for="notes">Notizen</label>
                 <textarea class="mt-1 block w-full rounded-md border-stone-300" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
             </div>
+            <label class="flex items-start gap-3 text-sm"><input type="checkbox" name="analysis_consent" value="1" required><span>Ich möchte dieses Dokument sowie die zur Zuordnung benötigten Namen meiner Familie zur Analyse an OpenAI senden.</span></label>
+            <p class="text-sm text-stone-600">Die hochgeladene Originaldatei wird nach der Analyse auch bei Fehlern vom FamilyManager-Server gelöscht. Gespeichert bleiben nur die Importangaben und erkannten Terminvorschläge. Die Datei auf deinem Gerät bleibt erhalten.</p>
             <button class="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white">Upload und Analyse starten</button>
         </form>
     </div>

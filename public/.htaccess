@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    # Block legacy document URLs even before the storage migration.
+    RewriteRule ^storage/document-imports(?:/|$) - [F,L]
+
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 

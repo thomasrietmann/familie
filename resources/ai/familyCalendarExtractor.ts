@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
 
@@ -150,15 +151,25 @@ export async function extractFamilyCalendarSuggestions({
     throw new Error(`Datei nicht gefunden: ${filePath}`);
   }
 
-  const openai = new OpenAI({ apiKey });
-
-  const file = await openai.files.create({
-    file: fs.createReadStream(filePath),
-    purpose: "assistants",
-  });
+  if (fs.statSync(filePath).size > 10 * 1024 * 1024) {
+    throw new Error("Dokument ist zu gross (maximal 10 MiB).");
+  }
+  const extension = path.extname(filePath).toLowerCase();
+  const imageMimeTypes: Record<string, string> = {
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp",
+  };
+  if (extension !== ".pdf" && !imageMimeTypes[extension]) {
+    throw new Error("Das CLI unterstützt PDF, JPG, PNG und WebP.");
+  }
+  const data = fs.readFileSync(filePath).toString("base64");
+  const fileInput = extension === ".pdf"
+    ? { type: "input_file" as const, filename: path.basename(filePath), file_data: `data:application/pdf;base64,${data}` }
+    : { type: "input_image" as const, image_url: `data:${imageMimeTypes[extension]};base64,${data}`, detail: "auto" as const };
+  const openai = new OpenAI({ apiKey, timeout: 90_000, maxRetries: 0 });
 
   const response = await openai.responses.create({
     model,
+    store: false,
     temperature: 0,
     input: [
       {
@@ -177,10 +188,7 @@ export async function extractFamilyCalendarSuggestions({
             type: "input_text",
             text: userPrompt(context),
           },
-          {
-            type: "input_file",
-            file_id: file.id,
-          },
+          fileInput,
         ],
       },
     ],
@@ -192,9 +200,10 @@ export async function extractFamilyCalendarSuggestions({
         schema,
       },
     },
+  }).catch(() => {
+    logger.error("OpenAI Anfrage fehlgeschlagen.");
+    throw new Error("Dokumentanalyse nicht verfügbar.");
   });
-
-  logger.info("OpenAI raw response", response);
 
   if (!response.output_text || response.output_text.trim() === "") {
     throw new Error("OpenAI Antwort enthält kein output_text.");
@@ -204,11 +213,8 @@ export async function extractFamilyCalendarSuggestions({
 
   try {
     parsed = JSON.parse(response.output_text);
-  } catch (error) {
-    logger.error("OpenAI JSON parse failed", {
-      error: error instanceof Error ? error.message : String(error),
-      output_text: response.output_text,
-    });
+  } catch {
+    logger.error("OpenAI JSON parse failed");
     throw new Error("OpenAI Antwort konnte nicht als JSON gelesen werden.");
   }
 
@@ -217,7 +223,6 @@ export async function extractFamilyCalendarSuggestions({
   if (validationErrors.length > 0) {
     logger.warn("OpenAI validation failed", {
       validationErrors,
-      output_text: response.output_text,
     });
     throw new Error(`OpenAI Antwort ist nicht valide: ${validationErrors.join(" ")}`);
   }
@@ -300,7 +305,7 @@ function validateExtraction(value: unknown): string[] {
 
     if (
       suggestion.suggested_owner_id !== null &&
-      (!Number.isInteger(suggestion.suggested_owner_id) || suggestion.suggested_owner_id < 1)
+      (typeof suggestion.suggested_owner_id !== "number" || !Number.isInteger(suggestion.suggested_owner_id) || suggestion.suggested_owner_id < 1)
     ) {
       errors.push(`suggestions.${index}.suggested_owner_id ist nicht gültig.`);
     }

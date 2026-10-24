@@ -22,7 +22,7 @@ class FamilyPolicy
 
     public function create(User $user): bool
     {
-        return ! $user->hasManagedFamily();
+        return ! $user->families()->exists();
     }
 
     public function update(User $user, Family $family): bool
@@ -32,11 +32,16 @@ class FamilyPolicy
 
     public function delete(User $user, Family $family): bool
     {
-        return $family->owner_user_id === $user->id;
+        return $this->manageAccess($user, $family);
     }
 
     public function inviteParent(User $user, Family $family): bool
     {
-        return $family->owner_user_id === $user->id;
+        return $this->manageAccess($user, $family);
+    }
+
+    public function manageAccess(User $user, Family $family): bool
+    {
+        return $family->owner_user_id === $user->id && $this->view($user, $family);
     }
 }

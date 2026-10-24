@@ -4,20 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\Family;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class FamilyPublicLinkController extends Controller
 {
     public function show(Family $family): View
     {
-        $this->authorize('update', $family);
+        $this->authorize('manageAccess', $family);
 
         return view('families.public-link', compact('family'));
     }
 
-    public function enable(Family $family): RedirectResponse
+    public function enable(Request $request, Family $family): RedirectResponse
     {
-        $this->authorize('update', $family);
+        $this->authorize('manageAccess', $family);
+        $request->validate(['current_password' => ['required', 'string', 'max:1024', 'current_password']]);
 
         if (! $family->public_token) {
             $family->generatePublicToken();
@@ -28,9 +30,10 @@ class FamilyPublicLinkController extends Controller
         return back()->with('status', 'Secret Link wurde aktiviert.');
     }
 
-    public function regenerate(Family $family): RedirectResponse
+    public function regenerate(Request $request, Family $family): RedirectResponse
     {
-        $this->authorize('update', $family);
+        $this->authorize('manageAccess', $family);
+        $request->validate(['current_password' => ['required', 'string', 'max:1024', 'current_password']]);
         $family->generatePublicToken();
 
         return back()->with('status', 'Secret Link wurde neu generiert.');
@@ -38,15 +41,16 @@ class FamilyPublicLinkController extends Controller
 
     public function disable(Family $family): RedirectResponse
     {
-        $this->authorize('update', $family);
+        $this->authorize('manageAccess', $family);
         $family->disablePublicToken();
 
         return back()->with('status', 'Secret Link wurde deaktiviert.');
     }
 
-    public function enableDashboard(Family $family): RedirectResponse
+    public function enableDashboard(Request $request, Family $family): RedirectResponse
     {
-        $this->authorize('update', $family);
+        $this->authorize('manageAccess', $family);
+        $request->validate(['current_password' => ['required', 'string', 'max:1024', 'current_password']]);
 
         if (! $family->dashboard_public_token) {
             $family->generateDashboardPublicToken();
@@ -57,9 +61,10 @@ class FamilyPublicLinkController extends Controller
         return back()->with('status', 'Dashboard Secret Link wurde aktiviert.');
     }
 
-    public function regenerateDashboard(Family $family): RedirectResponse
+    public function regenerateDashboard(Request $request, Family $family): RedirectResponse
     {
-        $this->authorize('update', $family);
+        $this->authorize('manageAccess', $family);
+        $request->validate(['current_password' => ['required', 'string', 'max:1024', 'current_password']]);
         $family->generateDashboardPublicToken();
 
         return back()->with('status', 'Dashboard Secret Link wurde neu generiert.');
@@ -67,7 +72,7 @@ class FamilyPublicLinkController extends Controller
 
     public function disableDashboard(Family $family): RedirectResponse
     {
-        $this->authorize('update', $family);
+        $this->authorize('manageAccess', $family);
         $family->disableDashboardPublicToken();
 
         return back()->with('status', 'Dashboard Secret Link wurde deaktiviert.');

@@ -35,6 +35,7 @@
             <form method="POST" action="{{ route('families.parents.invite', $family) }}" class="mt-5 space-y-3">
                 @csrf
                 <input class="block w-full rounded-md border-stone-300 text-sm" name="email" type="email" placeholder="parent@example.com" required>
+                <input class="block w-full rounded-md border-stone-300 text-sm" name="current_password" type="password" autocomplete="current-password" placeholder="Aktuelles Passwort" aria-label="Aktuelles Passwort" required>
                 <button class="rounded-md bg-stone-900 px-3 py-2 text-sm font-medium text-white">Elternteil einladen</button>
             </form>
         @endcan
@@ -105,7 +106,9 @@
         </div>
     </x-card>
 
+    @can('manageAccess', $family)
     <x-card>
+        <a class="mb-3 inline-block underline" href="{{ route('families.audit', $family) }}">Änderungsprotokoll</a>
         <h2 class="mb-4 text-lg font-semibold">Secret Links</h2>
         <div class="space-y-3">
             <div class="flex items-center justify-between rounded-md bg-stone-50 p-3">
@@ -127,4 +130,5 @@
             <a class="text-sm font-medium hover:underline" href="{{ route('families.public-link.show', $family) }}">Secret Links verwalten</a>
         </div>
     </x-card>
+    @endcan
 </div>

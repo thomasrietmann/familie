@@ -20,15 +20,19 @@ class StoreDocumentImportRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'document' => ['required', 'file', 'mimes:pdf,docx,jpg,jpeg,png,webp,tif,tiff', 'max:10240'],
+            'analysis_consent' => ['accepted'],
             'target_type' => ['required', 'in:family,user,child'],
             'target_id' => ['nullable', 'integer'],
-            'notes' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string', 'max:10000'],
         ];
     }
 
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
             $family = $this->route('family');
             $targetType = $this->input('target_type');
             $targetId = $this->input('target_id');
@@ -43,6 +47,7 @@ class StoreDocumentImportRequest extends FormRequest
 
             if (blank($targetId)) {
                 $validator->errors()->add('target_id', 'Bitte wählen Sie eine Person aus.');
+
                 return;
             }
 

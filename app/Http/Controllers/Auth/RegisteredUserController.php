@@ -3,31 +3,30 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RegisterRequest;
 use App\Models\Family;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    public function create(): View
+    public function create(Request $request): View
     {
+        abort_unless(config('security.registration_enabled'), 404);
+        $request->session()->put('registration_started_at', microtime(true));
+
         return view('auth.register');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(RegisterRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Password::defaults()],
-            'family_name' => ['required', 'string', 'max:255'],
-        ]);
+        $data = $request->validated();
 
         [$user, $family] = DB::transaction(function () use ($data): array {
             $user = User::create([
@@ -53,6 +52,9 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->forget('registration_started_at');
+        app(AuditLogger::class)->record('registered', $family);
 
         return redirect()->route('dashboard')->with('status', $family->name.' wurde erstellt.');
     }

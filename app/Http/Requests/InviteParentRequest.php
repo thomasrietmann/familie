@@ -15,6 +15,7 @@ class InviteParentRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email', 'max:255'],
+            'current_password' => ['required', 'string', 'max:1024', 'current_password'],
         ];
     }
 }

@@ -30,6 +30,9 @@ class UpdateFamilyMemberColorsRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
             $family = $this->route('family');
 
             if (! $family instanceof Family) {

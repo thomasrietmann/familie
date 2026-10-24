@@ -15,7 +15,7 @@ class UpdateFamilyRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'notes' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string', 'max:10000'],
         ];
     }
 }

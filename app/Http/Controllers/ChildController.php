@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateChildRequest;
 use App\Models\Child;
 use App\Models\Family;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ChildController extends Controller
@@ -28,7 +29,7 @@ class ChildController extends Controller
 
     public function store(StoreChildRequest $request, Family $family): RedirectResponse
     {
-        $family->children()->create($request->validated());
+        DB::transaction(fn () => $family->children()->create($request->validated()));
 
         return redirect()->route('families.children.index', $family)->with('status', 'Kind wurde erstellt.');
     }
@@ -42,7 +43,7 @@ class ChildController extends Controller
 
     public function update(UpdateChildRequest $request, Family $family, Child $child): RedirectResponse
     {
-        $child->update($request->validated());
+        DB::transaction(fn () => $child->update($request->validated()));
 
         return redirect()->route('families.children.index', $family)->with('status', 'Kind wurde aktualisiert.');
     }
@@ -50,7 +51,7 @@ class ChildController extends Controller
     public function destroy(Family $family, Child $child): RedirectResponse
     {
         $this->authorize('delete', $child);
-        $child->delete();
+        DB::transaction(fn () => $child->delete());
 
         return back()->with('status', 'Kind wurde gelöscht.');
     }

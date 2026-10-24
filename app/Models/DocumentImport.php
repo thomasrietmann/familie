@@ -11,6 +11,8 @@ class DocumentImport extends Model
 {
     use HasFactory;
 
+    protected $hidden = ['file_path', 'raw_ai_result'];
+
     protected $fillable = [
         'family_id',
         'uploaded_by_user_id',

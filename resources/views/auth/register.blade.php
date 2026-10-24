@@ -6,8 +6,14 @@
             <p class="mt-2 text-sm text-stone-600">Ein Login erstellt und verwaltet genau eine Familie.</p>
         </div>
 
-        <form method="POST" action="{{ route('register') }}" class="space-y-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
+        @if(config('services.recaptcha.enabled'))
+            <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}" defer></script>
+        @endif
+        <form method="POST" action="{{ route('register') }}" data-registration-form data-recaptcha-enabled="{{ config('services.recaptcha.enabled') ? 'true' : 'false' }}" data-recaptcha-site-key="{{ config('services.recaptcha.site_key') }}" class="space-y-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
             @csrf
+            <div hidden aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+            <input type="hidden" name="recaptcha_token">
+            <p hidden data-recaptcha-error class="text-sm text-red-700">Die Sicherheitsprüfung konnte nicht geladen werden. Bitte erneut versuchen.</p>
             <div>
                 <label class="text-sm font-medium" for="name">Name</label>
                 <input class="mt-1 block w-full rounded-md border-stone-300" id="name" name="name" value="{{ old('name') }}" required autofocus>
@@ -22,6 +28,7 @@
             </div>
             <div>
                 <label class="text-sm font-medium" for="password">Passwort</label>
+                <p class="text-sm text-stone-600">Mindestens 12 Zeichen mit Gross- und Kleinbuchstaben sowie einer Zahl.</p>
                 <input class="mt-1 block w-full rounded-md border-stone-300" id="password" name="password" type="password" required>
             </div>
             <div>

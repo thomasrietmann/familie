@@ -10,3 +10,8 @@
 .env.production
 npm-debug.log
 yarn-error.log
+
+/storage/app/private/*
+!/storage/app/private/.gitignore
+/.phpunit.result.cache
+/.env.*.local

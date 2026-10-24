@@ -2,7 +2,11 @@
   "name": "family-manager/app",
   "type": "project",
   "description": "FamilyManager - a personal family appointment overview built with Laravel.",
-  "keywords": ["laravel", "family", "appointments"],
+  "keywords": [
+    "laravel",
+    "family",
+    "appointments"
+  ],
   "license": "MIT",
   "require": {
     "php": "^8.3",
@@ -50,6 +54,11 @@
     "test": [
       "@php artisan config:clear --ansi",
       "@php artisan test"
+    ],
+    "check": [
+      "@test",
+      "@php vendor/bin/pint --test",
+      "@composer audit"
     ]
   },
   "extra": {
@@ -64,6 +73,9 @@
     "allow-plugins": {
       "pestphp/pest-plugin": true,
       "php-http/discovery": true
+    },
+    "platform": {
+      "php": "8.3.0"
     }
   },
   "minimum-stability": "stable",

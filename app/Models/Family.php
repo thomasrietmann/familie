@@ -13,6 +13,8 @@ class Family extends Model
 {
     use HasFactory;
 
+    protected $hidden = ['public_token', 'dashboard_public_token'];
+
     protected $fillable = [
         'name',
         'owner_user_id',

@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            throw new \RuntimeException('Demo-Daten sind in Produktion gesperrt.');
+        }
         $thomas = User::create([
             'name' => 'Thomas Rietmann',
             'email' => 'thomas@example.com',
@@ -96,14 +99,11 @@ class DatabaseSeeder extends Seeder
             'family_id' => $family->id,
             'uploaded_by_user_id' => $thomas->id,
             'title' => 'Schultermine Beispiel',
-            'file_path' => 'document-imports/schultermine-beispiel.pdf',
+            'file_path' => null,
             'original_filename' => 'schultermine-beispiel.pdf',
             'file_type' => 'pdf',
             'status' => 'analyzed',
-            'raw_ai_result' => [
-                'provider' => 'mock',
-                'note' => 'Beispieldaten aus dem Seeder.',
-            ],
+            'raw_ai_result' => null,
         ]);
 
         ImportedEventSuggestion::create([

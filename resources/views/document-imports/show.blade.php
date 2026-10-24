@@ -3,6 +3,7 @@
         <div><h1 class="text-3xl font-semibold tracking-tight">{{ $documentImport->title }}</h1><p class="mt-2 text-sm text-stone-600">{{ $documentImport->original_filename }} · {{ $documentImport->file_type }}</p></div>
         <a class="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white" href="{{ route('document-imports.review', $documentImport) }}">Vorschläge prüfen</a>
     </div>
+    <p class="mb-4 text-sm text-stone-600">Originaldateien werden nach der Analyse gelöscht. Hier bleiben die Importangaben und erkannten Vorschläge verfügbar.</p>
     <div class="grid gap-6 lg:grid-cols-3">
         <x-card><p class="text-sm text-stone-500">Status</p><p class="mt-2 text-xl font-semibold">{{ $documentImport->status }}</p></x-card>
         <x-card><p class="text-sm text-stone-500">Hochgeladen von</p><p class="mt-2 text-xl font-semibold">{{ $documentImport->uploadedBy->name }}</p></x-card>

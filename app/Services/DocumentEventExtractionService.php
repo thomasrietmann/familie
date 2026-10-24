@@ -4,16 +4,18 @@ namespace App\Services;
 
 use App\Models\DocumentImport;
 use App\Models\FamilyEvent;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use RuntimeException;
 use ZipArchive;
 
 class DocumentEventExtractionService
 {
     private const IMAGE_FILE_TYPES = ['jpg', 'jpeg', 'png', 'webp', 'tif', 'tiff'];
+
     private const IMAGE_MIME_TYPES = [
         'jpg' => 'image/jpeg',
         'jpeg' => 'image/jpeg',
@@ -23,7 +25,7 @@ class DocumentEventExtractionService
         'tiff' => 'image/tiff',
     ];
 
-    public function extract(DocumentImport $documentImport): array
+    public function extract(DocumentImport $documentImport, UploadedFile $file): array
     {
         $apiKey = config('services.openai.api_key');
 
@@ -35,23 +37,22 @@ class DocumentEventExtractionService
 
         $response = Http::withToken($apiKey)
             ->acceptJson()
-            ->timeout(config('services.openai.timeout', 60))
-            ->post('https://api.openai.com/v1/responses', $this->payload($documentImport));
+            ->connectTimeout(5)
+            ->timeout(min(90, max(5, (int) config('services.openai.timeout', 60))))
+            ->post('https://api.openai.com/v1/responses', $this->payload($documentImport, $file));
 
         if ($response->failed()) {
-            throw new RuntimeException('OpenAI Analyse fehlgeschlagen: '.$response->body());
+            throw new RuntimeException('Dokumentanalyse nicht verfügbar.');
         }
 
+        if (strlen($response->body()) > 2 * 1024 * 1024) {
+            throw new RuntimeException('Antwort zu gross.');
+        }
         $raw = $response->json();
 
         if (! is_array($raw)) {
             throw new RuntimeException('OpenAI Antwort ist kein gültiges JSON.');
         }
-
-        Log::info('OpenAI document extraction raw response', [
-            'document_import_id' => $documentImport->id,
-            'response' => $raw,
-        ]);
 
         $content = $this->responseText($raw);
         $decoded = json_decode($content, true);
@@ -69,10 +70,11 @@ class DocumentEventExtractionService
             ->all();
     }
 
-    private function payload(DocumentImport $documentImport): array
+    private function payload(DocumentImport $documentImport, UploadedFile $file): array
     {
         return [
             'model' => config('services.openai.model', 'gpt-5.4'),
+            'store' => false,
             'temperature' => 0,
             'input' => [
                 [
@@ -86,7 +88,7 @@ class DocumentEventExtractionService
                 ],
                 [
                     'role' => 'user',
-                    'content' => $this->userContent($documentImport),
+                    'content' => $this->userContent($documentImport, $file),
                 ],
             ],
             'text' => [
@@ -120,7 +122,7 @@ Gib exakt JSON im Format {"suggestions":[...]} zurück.
 PROMPT;
     }
 
-    private function userContent(DocumentImport $documentImport): array
+    private function userContent(DocumentImport $documentImport, UploadedFile $file): array
     {
         $content = [
             [
@@ -133,7 +135,7 @@ PROMPT;
             $content[] = [
                 'type' => 'input_file',
                 'filename' => $documentImport->original_filename,
-                'file_data' => 'data:application/pdf;base64,'.base64_encode($this->fileContents($documentImport)),
+                'file_data' => 'data:application/pdf;base64,'.base64_encode($file->getContent()),
             ];
 
             return $content;
@@ -142,7 +144,7 @@ PROMPT;
         if (in_array($documentImport->file_type, self::IMAGE_FILE_TYPES, true)) {
             $content[] = [
                 'type' => 'input_image',
-                'image_url' => $this->imageDataUrl($documentImport),
+                'image_url' => $this->imageDataUrl($documentImport, $file),
             ];
 
             return $content;
@@ -150,7 +152,7 @@ PROMPT;
 
         $content[] = [
             'type' => 'input_text',
-            'text' => "DOCX-Inhalt:\n".$this->docxText($documentImport),
+            'text' => "DOCX-Inhalt:\n".$this->docxText($file),
         ];
 
         return $content;
@@ -322,11 +324,24 @@ PROMPT;
 
     private function validateDecodedResponse(array $decoded, DocumentImport $documentImport): void
     {
+        Validator::make($decoded, [
+            'suggestions' => ['present', 'array', 'max:200'],
+            'suggestions.*' => ['array:title,description,starts_at,ends_at,all_day,location,category,suggested_owner_type,suggested_owner_id,confidence'],
+            'suggestions.*.title' => ['required', 'string', 'max:255'],
+            'suggestions.*.description' => ['nullable', 'string', 'max:10000'],
+            'suggestions.*.starts_at' => ['required', 'date'],
+            'suggestions.*.ends_at' => ['nullable', 'date', 'after_or_equal:suggestions.*.starts_at'],
+            'suggestions.*.all_day' => ['required', 'boolean'],
+            'suggestions.*.location' => ['nullable', 'string', 'max:255'],
+            'suggestions.*.suggested_owner_id' => ['nullable', 'integer'],
+            'suggestions.*.confidence' => ['nullable', 'numeric', 'between:0,1'],
+        ])->validate();
         $errors = [];
 
         foreach ($decoded['suggestions'] as $index => $suggestion) {
             if (! is_array($suggestion)) {
                 $errors[] = "suggestions.$index ist kein Objekt.";
+
                 continue;
             }
 
@@ -368,7 +383,6 @@ PROMPT;
         Log::warning('OpenAI document extraction validation failed', [
             'document_import_id' => $documentImport->id,
             'errors' => $errors,
-            'decoded' => $decoded,
         ]);
 
         throw new RuntimeException('OpenAI Antwort hat die Validierung nicht bestanden: '.implode(' ', $errors));
@@ -417,53 +431,38 @@ PROMPT;
         throw new RuntimeException('OpenAI Antwort enthält keinen Text.');
     }
 
-    private function documentPath(DocumentImport $documentImport): string
-    {
-        $path = Storage::disk('public')->path($documentImport->file_path);
-
-        if (! is_file($path)) {
-            throw new RuntimeException('Dokument konnte nicht gelesen werden.');
-        }
-
-        return $path;
-    }
-
-    private function fileContents(DocumentImport $documentImport): string
-    {
-        $contents = file_get_contents($this->documentPath($documentImport));
-
-        if ($contents === false) {
-            throw new RuntimeException('Dokument konnte nicht gelesen werden.');
-        }
-
-        return $contents;
-    }
-
-    private function imageDataUrl(DocumentImport $documentImport): string
+    private function imageDataUrl(DocumentImport $documentImport, UploadedFile $file): string
     {
         $mimeType = self::IMAGE_MIME_TYPES[$documentImport->file_type] ?? 'application/octet-stream';
 
-        return 'data:'.$mimeType.';base64,'.base64_encode($this->fileContents($documentImport));
+        return 'data:'.$mimeType.';base64,'.base64_encode($file->getContent());
     }
 
-    private function docxText(DocumentImport $documentImport): string
+    private function docxText(UploadedFile $file): string
     {
         if (! class_exists(ZipArchive::class)) {
             throw new RuntimeException('Die PHP Zip-Erweiterung ist für DOCX-Analysen nicht verfügbar.');
         }
 
-        $zip = new ZipArchive();
-        $path = $this->documentPath($documentImport);
-
-        if ($zip->open($path) !== true) {
-            throw new RuntimeException('DOCX-Datei konnte nicht geöffnet werden.');
-        }
-
-        $xml = $zip->getFromName('word/document.xml');
-        $zip->close();
-
-        if ($xml === false) {
-            throw new RuntimeException('DOCX-Inhalt konnte nicht gelesen werden.');
+        $zip = new ZipArchive;
+        $opened = false;
+        try {
+            if ($zip->open($file->getPathname()) !== true) {
+                throw new RuntimeException('Ungültiges DOCX-Dokument.');
+            }
+            $opened = true;
+            $stat = $zip->statName('word/document.xml');
+            if ($stat === false || $stat['size'] > 2 * 1024 * 1024) {
+                throw new RuntimeException('DOCX-Inhalt fehlt oder ist zu gross.');
+            }
+            $xml = $zip->getFromName('word/document.xml', 2 * 1024 * 1024);
+            if ($xml === false || str_contains(strtoupper($xml), '<!DOCTYPE')) {
+                throw new RuntimeException('Ungültiger DOCX-Inhalt.');
+            }
+        } finally {
+            if ($opened) {
+                $zip->close();
+            }
         }
 
         $text = html_entity_decode(strip_tags(str_replace(['</w:p>', '</w:tr>'], "\n", $xml)));

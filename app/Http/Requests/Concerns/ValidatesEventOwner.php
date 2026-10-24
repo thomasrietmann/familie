@@ -12,6 +12,9 @@ trait ValidatesEventOwner
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
             $family = $this->route('family') ?? $this->route('event')?->family ?? $this->route('suggestion')?->family;
             $ownerType = $this->input('owner_type');
             $ownerId = $this->input('owner_id');
@@ -26,6 +29,7 @@ trait ValidatesEventOwner
 
             if (in_array($ownerType, ['user', 'child'], true) && blank($ownerId)) {
                 $validator->errors()->add('owner_id', 'Bitte wählen Sie die konkrete Person aus.');
+
                 return;
             }
 
@@ -50,7 +54,7 @@ trait ValidatesEventOwner
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:10000'],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'all_day' => ['boolean'],
@@ -60,7 +64,7 @@ trait ValidatesEventOwner
             'owner_type' => ['required', 'in:family,user,child'],
             'owner_id' => ['nullable', 'integer'],
             'status' => ['required', 'in:planned,confirmed,cancelled'],
-            'notes' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string', 'max:10000'],
         ];
     }
 

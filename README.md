@@ -1,155 +1,131 @@
 # FamilyManager
 
-FamilyManager ist ein klassisches Laravel-MVC-MVP für eine persönliche Familien-Terminübersicht. Die App nutzt Blade, Tailwind CSS, MySQL und OpenAI für die Dokumentanalyse.
+Laravel-13-Anwendung für Familien, Termine und die Prüfung von Dokumentimporten. Die Oberfläche besteht aus serverseitigen Blade-Seiten, lokal gebautem Tailwind CSS und Vanilla JavaScript. PHP verarbeitet Dokumente synchron über die OpenAI Responses API. Es werden weder Docker noch Redis noch dauerhafte Queue Worker benötigt.
 
-## 1. Installation
+Die ausführliche [Anleitung für Installation, Upgrade und Produktionsprüfung](INSTALLATION.md) enthält die Schritte für METANET, die Löschung vorhandener Originaldokumente und die Abnahme nach dem Deployment.
 
-```bash
+## Voraussetzungen
+
+- PHP 8.3 oder neuer, bevorzugt 8.4; Argon2id-Unterstützung für Produktion.
+- Extensions: ctype, curl, dom, fileinfo, filter, hash, mbstring, openssl, pdo_mysql, session, tokenizer, xml, zip; pdo_sqlite für lokale Tests.
+- MySQL oder MariaDB (CI prüft zusätzlich MariaDB 10.6).
+- Composer 2; Node.js 24 und npm für den lokalen Build oder CI. Node ist auf dem Webserver nicht erforderlich.
+- Document Root ausschliesslich `public/`, HTTPS in Produktion.
+
+## Lokal starten
+
+```sh
 composer install
 cp .env.example .env
 php artisan key:generate
-```
-
-Laravel 13 benötigt PHP 8.3 oder neuer.
-
-Für Metanet kannst du alternativ die Produktionsvorlage verwenden:
-
-```bash
-cp .env.metanet.example .env
-php artisan key:generate
-```
-
-Trage danach die MySQL-Zugangsdaten aus dem Metanet Control Panel in `.env` ein:
-
-```dotenv
-DB_CONNECTION=mysql
-DB_HOST=localhost
-DB_PORT=3306
-DB_DATABASE=metanet_db_name
-DB_USERNAME=metanet_db_user
-DB_PASSWORD=metanet_db_password
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-5.4
-```
-
-Je nach Metanet-Setup kann `DB_HOST` statt `localhost` ein spezifischer MySQL-Host aus dem Control Panel sein.
-
-## 2. Migration + Seeding
-
-```bash
-php artisan migrate:fresh --seed
-```
-
-Der Seeder erstellt die Familie Rietmann, zwei Eltern-User, zwei Kinder, Beispieltermine, einen analysierten Dokumentimport und offene Import-Vorschläge.
-
-## 3. Start der App
-
-```bash
+# MySQL-Verbindung und bei Bedarf OPENAI_API_KEY in .env eintragen.
+php artisan migrate
+npm ci --ignore-scripts
+npm run build
+php artisan family:create-account
 php artisan serve
 ```
 
-Die App nutzt für das MVP statische Assets in `public/css` und `public/js` sowie Tailwind über CDN. Ein Node-/npm-Build ist dadurch für Metanet nicht nötig.
+Alternativ `npm run dev` während der Frontend-Entwicklung starten. Im lokalen Modus ist die CSP für Vite/HMR ausgesetzt; Tests und Produktion verwenden die restriktive CSP. `npm run build` erzeugt versionierte Assets unter `public/build/`. Diesen Ordner beim Deployment mitliefern. Die bisherigen Dateien unter `public/css` und `public/js` und das Tailwind-CDN werden nicht mehr verwendet.
 
-## 4. Test-Login
+`php artisan db:seed` erzeugt ausschliesslich lokale Demo-Daten mit Testpasswörtern. Der Seeder verweigert die Ausführung in Produktion. Demo-Daten enthalten einen beispielhaften Dokumentdatensatz ohne Originaldatei und sind keine Produktionsdaten.
 
-- E-Mail: `thomas@example.com`
-- Passwort: `password`
+## Rechte und Freigaben
 
-Neue Accounts können über `/register` erstellt werden. Die Registrierung legt direkt eine Familie an und macht den neuen User zum Owner.
+- Ein Account gehört höchstens einer Familie an; aktive Eltern dürfen die Familieninhalte bearbeiten.
+- Nur der aktive Owner verwaltet Secret Links, Elternberechtigungen und das Änderungsprotokoll oder löscht die Familie.
+- Das Aktivieren/Erneuern öffentlicher Links, Hinzufügen eines Elternteils und Löschen der Familie verlangen das aktuelle Passwort. Das Deaktivieren einer Freigabe bleibt ohne zusätzliche Passwortabfrage möglich.
+- Die Elternverwaltung berechtigt bereits vorhandene, noch keiner Familie zugeordnete Accounts. Sie versendet keine E-Mail-Einladungen und legt keine Accounts automatisch an.
+- Öffentliche Links sind widerrufbare Zugriffsschlüssel. Sie zeigen nur freigegebene Termine, keine Notizen, Beschreibungen, Dokumente oder Importdaten. Jeder mit dem Link kann diese Ansicht lesen.
+- Das Änderungsprotokoll enthält Aktion, Zeit, Nutzer-/Datensatz-ID und geänderte Feldnamen. Es speichert keine Inhalte, Passwörter, Tokens, IP-Adressen oder User-Agents.
 
-## 5. Familien- und Elternrechte
+## Dokumente und KI
 
-Ein Login verwaltet genau eine Familie. Jede Familie hat einen Owner. Aktive Eltern sind über `family_users` mit Rolle `owner` oder `parent` berechtigt. Policies schützen Familien, Kinder, Termine, Dokumentimporte und Import-Vorschläge. Ein Eltern-Login kann im MVP nicht mehreren Familien zugeordnet werden.
+Originaldateien werden nicht dauerhaft abgelegt. Die Analyse liest direkt den temporären PHP-Upload; ein `finally`-Block löscht ihn nach Verarbeitung auch bei KI- und Datenbankfehlern. DOCX wird direkt aus diesem Upload gelesen, ohne zusätzliche Dateikopie. Es gibt keinen Originaldownload. Importangaben, validierte Vorschläge und übernommene Termine bleiben in der Datenbank. Die Oberfläche erklärt diese Aufbewahrung vor dem Upload.
 
-## 6. Termine
+Die Analyse braucht die ausdrückliche Auswahl im Uploadformular. PDFs und Bilder sowie Zuordnungsnamen werden an OpenAI gesendet; DOCX wird lokal begrenzt entpackt und als Text gesendet. Die API wird mit `store=false` aufgerufen. Dies ersetzt keine Prüfung der beim Anbieter geltenden Datenverarbeitung. KI-Rohantworten werden weder gespeichert noch protokolliert; validierte Vorschläge bleiben zur Prüfung in der Datenbank. Fehler enthalten keine Providerantworten oder Schlüssel. Übernahmen sind transaktional und gegen Wiederholung geschützt.
 
-Beim Erfassen eines Termins wird direkt gewählt, für wen der Termin ist: ganze Familie, Elternteil oder Kind. Dokument-Uploads haben dieselbe Auswahl, damit Import-Vorschläge bereits einer Familie oder Einzelperson zugeordnet werden können.
+Die Analyse läuft weiterhin synchron. `OPENAI_TIMEOUT` ist auf maximal 90 Sekunden begrenzt. PHP-/Proxy-Zeitlimits müssen die Analyse zulassen. Uploads sind auf 10 MiB begrenzt; `upload_max_filesize=10M`, `post_max_size=12M` und ausreichend `memory_limit` (empfohlen 256M) einstellen. Externe API-Aufrufe sind in Tests simuliert. Das optionale lokale CLI (`npm run extract:events -- /pfad/dokument.pdf`) sendet PDF-/Bilddaten ebenfalls direkt mit `store=false`, ohne eine Datei beim Anbieter anzulegen oder Rohantworten zu protokollieren. Die lokal ausgewählte Quelldatei ist kein Serverupload und wird vom CLI nicht gelöscht.
 
-In den Einstellungen kann für jedes Elternteil und jedes Kind eine von 20 festen Farben gewählt werden. Diese Farbe wird vor Terminen im privaten Dashboard, in der Terminübersicht und in den öffentlichen Secret-Link-Ansichten angezeigt. Familientermine erhalten einen Regenbogen-Punkt.
+## Produktionskonfiguration / METANET
 
-## 7. Dokument-Import Ablauf
+`.env.metanet.example` ist die Vorlage für eine **neue** Installation. Bestehende `.env`-Dateien ergänzen und ihren `APP_KEY` unbedingt behalten.
 
-1. Familie auswählen
-2. PDF, DOCX oder Bild hochladen
-3. `DocumentImport` wird gespeichert
-4. `DocumentEventExtractionService` analysiert das Dokument
-5. `ImportedEventSuggestion`-Einträge werden erstellt
-6. Vorschläge prüfen, bearbeiten, übernehmen oder ablehnen
-7. Übernommene Vorschläge werden als `FamilyEvent` mit `source = import` gespeichert
-
-## 8. Hinweise zum OpenAI Service
-
-`app/Services/DocumentEventExtractionService.php` nutzt die OpenAI Responses API mit Structured Outputs. PDFs und Bilder werden direkt an OpenAI übergeben und dort gelesen. DOCX-Dateien werden serverseitig ausgelesen und als Text analysiert.
-
-In `.env` muss ein API-Key gesetzt sein:
+Wesentliche Werte:
 
 ```dotenv
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-5.4
-OPENAI_TIMEOUT=60
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://deine-domain.ch
+FORCE_HTTPS=true
+SESSION_DRIVER=file
+SESSION_ENCRYPT=true
+SESSION_EXPIRE_ON_CLOSE=true
+SESSION_LIFETIME=60
+SESSION_SECURE_COOKIE=true
+CACHE_STORE=file
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=sync
+HASH_DRIVER=argon2id
+HASH_VERIFY=false
+REGISTRATION_ENABLED=false
+LOG_LEVEL=warning
 ```
 
-Wenn DOCX-Extraktion oder die OpenAI-Analyse fehlschlägt, erhält der Dokumentimport den Status `failed` und die Fehlermeldung wird im Import gespeichert.
+`HASH_VERIFY=false` ermöglicht den Übergang vorhandener bcrypt-Passwörter zu Argon2id; beim nächsten erfolgreichen Login wird neu gehasht. Es deaktiviert nicht die Passwortprüfung. Der Produktionscheck verlangt Argon2id-Unterstützung. Bestehende Sitzungen werden durch die Umstellung ungültig.
 
-Für einen SDK-basierten TypeScript-Extractor liegt zusätzlich `resources/ai/familyCalendarExtractor.ts` bereit. Er lädt PDF/Bild-Dateien mit dem OpenAI SDK hoch, nutzt die Responses API mit `temperature: 0`, strict Structured Outputs und validiert die Rückgabe nach dem Modellaufruf.
+Die öffentliche Registrierung ist produktiv standardmässig geschlossen. Accounts lassen sich interaktiv über `php artisan family:create-account` anlegen. Für offene Registrierung zusätzlich `REGISTRATION_ENABLED=true`, `RECAPTCHA_ENABLED=true`, `RECAPTCHA_SITE_KEY` und `RECAPTCHA_SECRET_KEY` setzen und die Domain bei Google freigeben. Fehlende/ungültige Prüfungen verhindern die Registrierung. Rate Limits und Honeypot gelten zusätzlich.
 
-Lokaler Test nach Installation der Node-Abhängigkeiten:
+PHP-Prozess benötigt Schreibrechte nur auf `storage/` und `bootstrap/cache/`; keine pauschalen 777-Rechte. Quellcode, `.env`, Backups und private Dateien gehören ausserhalb des Document Root. Bei Plesk prüfen, dass direkte statische Auslieferung über nginx die Apache-Sperre alter Dokumentpfade nicht umgeht. Falls nginx statische Dateien direkt bedient, vor dem Upgrade dort ebenfalls sperren:
 
-```bash
-npm install
-npm run extract:events -- /pfad/zum/dokument.pdf
+```nginx
+location ^~ /storage/document-imports/ { return 403; }
 ```
 
-## 9. Secret Link Funktion
+Ohne angepasste nginx-Konfiguration die direkte statische Auslieferung dieses Pfades abschalten. Die mitgelieferte `public/.htaccess` sperrt ihn für Apache. Nach `documents:purge` sind vorhandene Originaldateien entfernt.
 
-In der Familienverwaltung kann der Secret Link aktiviert, deaktiviert oder neu generiert werden. Die öffentliche Route lautet:
+## Bestehende Installation sicher aktualisieren
 
-```text
-GET /public/family/{token}
+1. Datenbank, `.env` und insbesondere den bestehenden `APP_KEY` sichern. Originaldateien werden nicht übernommen und gehören nicht in neue Sicherungen. Wartungsfenster einplanen. **Kein** `key:generate`, `migrate:fresh` oder Produktions-Seeding ausführen.
+2. Alten öffentlichen Dokumentpfad auch auf Webserver-/nginx-Ebene sperren (siehe oben) und `php artisan down` ausführen. Laravel-Wartung allein sperrt keine statischen Dateien.
+3. Den geprüften Code inklusive `composer.lock`, `package-lock.json` und lokal/CI erzeugtem `public/build/` hochladen. Den laufenden Webroot auf `public/` belassen. Kein `public/hot` ausliefern.
+4. Die bestehende `.env` um die Produktionswerte ergänzen, `APP_KEY` behalten; PHP-Extensions und CLI-/Web-PHP-Version abgleichen.
+5. Im App-Verzeichnis ausführen:
+
+```sh
+composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+php artisan optimize:clear
+php artisan migrate --force
+php artisan documents:purge --dry-run
+php artisan documents:purge
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan security:check
 ```
 
-Die Ansicht funktioniert ohne Login und zeigt nur Termine von heute und morgen. `parents_only` Termine, Dokumente, Notizen, Importdaten, interne IDs und Bearbeitungsaktionen werden nicht angezeigt.
+`documents:purge` löscht alle Originaldateien unter `document-imports/` auf den bisherigen öffentlichen und privaten Dokumentdatenträgern, einschliesslich verwaister Uploads. Es findet keine Dokumentmigration statt. Der Befehl setzt alte Dateipfade und KI-Rohantworten in der Datenbank auf `NULL`; Importangaben, Vorschläge und Termine bleiben erhalten. Er ist wiederholbar, toleriert bereits fehlende Originale und meldet Löschfehler. `--dry-run` zählt nur die Dateien. Alte Originale in externen Backups und frühere Inhaltslogs müssen zusätzlich nach der geltenden Aufbewahrungsregel entfernt werden. Die neue Datenbankmigration macht lediglich die nicht mehr benötigten Dateipfade optional.
 
-Zusätzlich kann ein separater Dashboard Secret Link aktiviert werden. Dieser zeigt ohne Login nur öffentliche Termin-Kennzahlen und nächste sichtbare Termine, ebenfalls ohne Dokumente, Notizen, Importdaten oder Admin-Aktionen.
+6. Nur bei erfolgreichen Prüfungen `php artisan up` ausführen. Danach Login, Kalender, Upload mit Testdokument inklusive Löschung des temporären Uploads und anschliessender Vorschlagsübernahme, Secret-Link-Widerruf und direkte Ablehnung einer alten `/storage/document-imports/...`-URL prüfen. Ein Mitglied einer anderen Familie muss am Zugriff scheitern.
 
-## 10. Storage Link
+`security:check` prüft Produktionswerte, Extensions, Argon2id, Build, Datenbank/Audit-Tabelle, öffentliche/private Originaldateireste, dauerhafte Dateipfade und gespeicherte KI-Rohantworten. Webserver-/Proxy-Konfiguration und echte Anbieterzugänge müssen zusätzlich auf dem Zielsystem geprüft werden. Der Befehl sendet keine Dokumente an externe Dienste.
 
-Für hochgeladene Dokumente:
+Das Löschen der Originale ist endgültig. Ein Code-Rollback stellt sie nicht wieder her; alten Code mit dauerhafter Dokumentablage nicht erneut freigeben. `APP_KEY` getrennt und sicher sichern, damit verschlüsselte Sitzungen weiter lesbar bleiben. PHP-Upload-Temporärverzeichnis ausserhalb des Webroots belassen und aus Backups ausschliessen; die Hosting-Bereinigung muss auch Reste nach einem harten Prozess-/Serverabbruch entfernen.
 
-```bash
-php artisan storage:link
+## Tests und laufender Betrieb
+
+```sh
+npm ci --ignore-scripts
+npm run build
+npm run typecheck
+npm test
+composer install
+vendor/bin/phpunit
+vendor/bin/pint --test
+composer audit
+npm audit
 ```
 
-Uploads werden unter `storage/app/public/document-imports` gespeichert.
+Die Tests prüfen Authentifizierung, CSRF, Rate Limits, Familienisolation, Mass Assignment, HTML-Escaping, Freigaben, Header, Upload-Löschung bei Erfolg und Fehlern, Bereinigung alter Originale, KI-Fehlerfälle, Audit und transaktionale Importübernahme. Sie verwenden isolierte Datenbanken und simulierte externe Dienste. Die GitHub-Actions-Pipeline führt Tests mit PHP 8.3 und 8.4 sowie SQLite und MariaDB 10.6 aus und stellt den Frontend-Build bereit. Sie deployt nicht automatisch.
 
-## Metanet Deployment Hinweise
-
-- Die App ist standardmässig auf MySQL konfiguriert.
-- Setze im Hosting die Document Root auf den Laravel-Ordner `public`.
-- Falls die Document Root nicht direkt auf `public` zeigen kann, lege die Laravel-App ausserhalb des Webroots ab und verweise die Domain/Subdomain auf den `public`-Ordner.
-- Führe `composer install --no-dev --optimize-autoloader` auf dem Zielsystem oder lokal für das Deployment aus.
-- Führe nach dem Upload `php artisan migrate --force` aus.
-- Führe `php artisan storage:link` aus oder lege den Symlink `public/storage -> ../storage/app/public` an.
-- Setze `APP_ENV=production`, `APP_DEBUG=false` und `APP_URL` auf deine echte Domain.
-- Für dieses MVP ist kein `npm install` und kein Vite-Build auf Metanet nötig.
-
-## 11. Nächste mögliche Features
-
-- Kalenderansicht
-- Monatsansicht
-- iCal Export
-- Google Calendar Sync
-- Outlook Calendar Sync
-- E-Mail Einladungen für Eltern
-- Erinnerungen
-- Push Notifications
-- Wiederkehrende Termine
-- Anhänge pro Termin
-- Kommentare pro Termin
-- feinere Rollen und Berechtigungen
-- Queue-basierte Dokumentanalyse
-- Optionale externe OCR-Integration
-- WhatsApp-kompatible Tagesübersicht
-- Public View mit optionalem Zeitraum
-- Familien-Checkliste
-- Packlisten für Ausflüge
+Für Aufbewahrung regelmässig `php artisan audit:prune` ausführen (z. B. täglich per Plesk-Aufgabe); Standard 180 Tage, konfigurierbar mit `AUDIT_RETENTION_DAYS`, mindestens 30 Tage. Datenbank und Schlüssel sichern und Wiederherstellung testen. Der Audit-Log ist kein gegen Datenbankadministratoren manipulationssicheres Archiv. Weitere Grenzen stehen in [SECURITY.md](SECURITY.md).
