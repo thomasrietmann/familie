@@ -54,6 +54,7 @@ class PrintController extends Controller
         return view('print.index', [
             'family' => $family,
             'month' => $month,
+            'orientation' => $request->query('orientation') === 'portrait' ? 'portrait' : 'landscape',
             'previousMonth' => $month->copy()->subMonths(2)->format('Y-m'),
             'nextMonth' => $periodEnd->format('Y-m'),
             'months' => collect([0, 1])->map(fn (int $offset) => $this->calendarMonth($month->copy()->addMonths($offset), $eventsByDate)),
