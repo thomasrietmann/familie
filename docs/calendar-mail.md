@@ -50,13 +50,27 @@ Kein Catch-all aktivieren, keine automatische Antwort an unbekannte/abgewiesene 
 
 ## Cron und Fehlerbehandlung
 
-Im Hosting einen Scheduler-Aufruf pro Minute mit dem richtigen PHP-Interpreter und dem absoluten App-Pfad anlegen:
+In METANET unter **Geplante Aufgaben → Aufgabe hinzufügen** den Typ **PHP-Skript ausführen** wählen, analog zum Travel-Mailimport. Zwei Aufgaben anlegen:
+
+| Feld | Mailimport | Bereinigung |
+|---|---|---|
+| Aktiv | Ja | Ja |
+| Skriptpfad | `familie.git/cron-mail-import.php` | `familie.git/cron-mail-prune.php` |
+| PHP-Version | 8.3 oder 8.4 | 8.3 oder 8.4 |
+| Ausführen | Cron-Stil | Cron-Stil |
+| Zeitplan | `*/5 * * * *` | `15 3 * * *` |
+| Beschreibung | FamilyManager Mailimport | FamilyManager Mailbereinigung |
+| Benachrichtigen | Nur Fehler | Nur Fehler |
+
+Die Dateien über die Dateiauswahl im Basisverzeichnis unter `familie.git` auswählen. Falls die Oberfläche den Pfad mit führendem Slash anzeigt, diesen übernehmen. Keine Argumente erforderlich. Der Einstiegspunkt lädt Laravel relativ zu seiner eigenen Datei und benötigt weder `cd` noch einen manuell eingetragenen PHP-Pfad. Die Dateien liegen ausserhalb von `public/` und verweigern HTTP-Aufrufe. Mit **Jetzt ausführen** testen und anschliessend speichern. Einen zuvor eingerichteten `schedule:run`-Job für diese Mailaufgaben deaktivieren, damit nur eine Variante aktiv ist.
+
+Alternativ bleibt der Laravel-Scheduler über einen Shell-Cronjob möglich:
 
 ```cron
 * * * * * cd /ABSOLUTER/APP/PFAD && /PFAD/ZU/php artisan schedule:run
 ```
 
-Der Scheduler ruft den Import alle fünf Minuten und die Aufbewahrungsbereinigung täglich auf. Alternativ direkt alle fünf Minuten `calendar-mail:poll` und täglich `calendar-mail:prune` planen; nicht beide Varianten gleichzeitig einrichten. Keine dauerhaften Queue Worker oder Redis erforderlich. Der persistente Datei-/Datenbank-Cache muss funktionieren. Scheduler und direkter Aufruf sind gegen parallele Läufe gesperrt; bei mehreren App-Servern müssen sie einen gemeinsamen Lock-Speicher verwenden.
+Der Scheduler ruft den Import alle fünf Minuten und die Aufbewahrungsbereinigung täglich auf. Nur eine Variante einrichten. Keine dauerhaften Queue Worker oder Redis erforderlich. Der persistente Datei-/Datenbank-Cache muss funktionieren. Der Import ist auch beim PHP-Datei-Aufruf gegen parallele Läufe gesperrt; bei mehreren App-Servern müssen sie einen gemeinsamen Lock-Speicher verwenden.
 
 Ein Lauf verarbeitet höchstens zehn Nachrichten aus den letzten 30 Tagen (IMAP-Zustelldatum). Er liest Nachrichten auch dann, wenn sie bereits als gelesen markiert wurden. Nachrichten dürfen vor erfolgreichem Import nicht aus dem konfigurierten Ordner entfernt werden. Die technische Zustellidentität kombiniert Postfach, UIDVALIDITY und UID; der Kalenderschlüssel verhindert erneute Termine auch nach einer UIDVALIDITY-Änderung. Ein geplanter Ausfall von mehr als 30 Tagen erfordert eine bewusste Nachlieferung der betroffenen Einladungen.
 
