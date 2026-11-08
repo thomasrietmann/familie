@@ -4,6 +4,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CalendarSenderController;
 use App\Http\Controllers\ChildController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentImportController;
@@ -37,6 +38,12 @@ Route::middleware('auth')->scopeBindings()->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/calendar', CalendarController::class)->name('calendar');
     Route::get('/print', PrintController::class)->name('print');
+
+    Route::get('/settings/calendar-mail', [CalendarSenderController::class, 'index'])->name('calendar-mail.index');
+    Route::post('/settings/calendar-mail', [CalendarSenderController::class, 'store'])->middleware('throttle:calendar-senders')->name('calendar-mail.store');
+    Route::post('/settings/calendar-mail/{address}/verify', [CalendarSenderController::class, 'verify'])->middleware('throttle:calendar-verification')->name('calendar-mail.verify');
+    Route::post('/settings/calendar-mail/{address}/resend', [CalendarSenderController::class, 'resend'])->middleware('throttle:calendar-senders')->name('calendar-mail.resend');
+    Route::delete('/settings/calendar-mail/{address}', [CalendarSenderController::class, 'destroy'])->name('calendar-mail.destroy');
 
     Route::resource('families', FamilyController::class)->middlewareFor('destroy', 'throttle:sensitive');
     Route::resource('families.children', ChildController::class)->except(['show'])->parameters(['children' => 'child']);

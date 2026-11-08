@@ -14,6 +14,6 @@
         <x-card><h2 class="mb-3 text-lg font-semibold">Person</h2><p>{{ $event->ownerDisplayName() }}</p></x-card>
         <x-card><h2 class="mb-3 text-lg font-semibold">Ort</h2><p>{{ $event->location ?: 'Kein Ort hinterlegt.' }}</p></x-card>
         <x-card><h2 class="mb-3 text-lg font-semibold">Notizen</h2><p class="text-sm text-stone-700">{{ $event->notes ?: 'Keine Notizen.' }}</p></x-card>
-        <x-card class="lg:col-span-2"><h2 class="mb-3 text-lg font-semibold">Quelle / Import-Dokument</h2><p class="text-sm text-stone-700">{{ $event->source === 'import' ? 'Importiert aus Dokument #'.$event->document_import_id : 'Manuell erfasst' }}</p></x-card>
+        <x-card class="lg:col-span-2"><h2 class="mb-3 text-lg font-semibold">Quelle / Import-Dokument</h2><p class="text-sm text-stone-700">{{ match ($event->source) { 'import' => 'Importiert aus Dokument #'.$event->document_import_id, 'email' => 'Importiert aus E-Mail-Einladung', default => 'Manuell erfasst' } }}</p></x-card>
     </div>
 </x-layouts.app>

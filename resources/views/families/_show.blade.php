@@ -7,6 +7,11 @@
 </div>
 
 <div class="grid gap-6 lg:grid-cols-2">
+    <x-card class="lg:col-span-2">
+        <h2 class="mb-2 text-lg font-semibold">E-Mail-Termine</h2>
+        <p class="text-sm text-stone-600">Sende Outlook-Einladungen von einer bestätigten Absenderadresse an {{ config('calendar_mail.address') }}. Deine Absenderadressen verwaltest du persönlich.</p>
+        <a class="mt-4 inline-block rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white" href="{{ route('calendar-mail.index') }}">E-Mail-Termine verwalten</a>
+    </x-card>
     <x-card>
         <h2 class="mb-4 text-lg font-semibold">Familie</h2>
         <div class="space-y-3">

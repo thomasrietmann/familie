@@ -33,5 +33,5 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return null;
         });
-        $exceptions->dontFlash(['current_password', 'recaptcha_token', 'notes', 'description']);
+        $exceptions->dontFlash(['current_password', 'recaptcha_token', 'notes', 'description', 'code']);
     })->create();

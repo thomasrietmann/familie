@@ -27,6 +27,11 @@ class CheckSecurity extends Command
             'Kein Vite-Entwicklungsserver' => ! is_file(public_path('hot')),
             'Registrierung geschlossen oder reCAPTCHA konfiguriert' => ! config('security.registration_enabled') || (config('services.recaptcha.enabled') && filled(config('services.recaptcha.site_key')) && filled(config('services.recaptcha.secret_key')) && config('services.recaptcha.expected_hostname') === parse_url(config('app.url'), PHP_URL_HOST)),
         ];
+        if (config('calendar_mail.enabled')) {
+            $checks['E-Mail-Terminimport vollständig konfiguriert'] = filled(config('calendar_mail.host')) && filled(config('calendar_mail.username')) && filled(config('calendar_mail.password')) && filled(config('services.openai.api_key')) && filter_var(config('calendar_mail.address'), FILTER_VALIDATE_EMAIL);
+            $checks['Vertrauenswürdige Mailauthentifizierung konfiguriert'] = count(config('calendar_mail.trusted_authserv_ids', [])) > 0;
+            $checks['Bestätigungsmails über TLS-SMTP'] = config('mail.default') === 'smtp' && in_array(config('mail.mailers.smtp.scheme'), ['smtp', 'smtps'], true) && config('mail.mailers.smtp.require_tls') && filled(config('mail.mailers.smtp.host')) && filled(config('mail.mailers.smtp.username')) && filled(config('mail.mailers.smtp.password'));
+        }
         try {
             $encrypted = Crypt::encryptString('readiness');
             $checks['APP_KEY für Verschlüsselung verwendbar'] = Crypt::decryptString($encrypted) === 'readiness';
@@ -48,6 +53,9 @@ class CheckSecurity extends Command
         try {
             DB::select('select 1');
             $checks['Datenbank und Audit-Migration'] = Schema::hasTable('audit_logs');
+            if (config('calendar_mail.enabled')) {
+                $checks['E-Mail-Import-Migration vorhanden'] = Schema::hasTable('calendar_sender_addresses') && Schema::hasTable('calendar_mail_receipts') && Schema::hasTable('calendar_mail_events');
+            }
             $checks['Keine öffentlichen Dokumente'] = collect(Storage::disk('public')->allFiles('document-imports'))->reject(fn ($path) => basename($path) === '.gitignore')->isEmpty();
             $checks['Keine privat aufbewahrten Originaldateien'] = collect(Storage::disk('documents')->allFiles('document-imports'))->reject(fn ($path) => basename($path) === '.gitignore')->isEmpty();
             $checks['Keine gespeicherten KI-Rohantworten'] = ! DocumentImport::whereNotNull('raw_ai_result')->exists();

@@ -2,6 +2,8 @@
 
 Diese Anleitung beschreibt das manuelle Deployment. Ein GitHub-Push startet die CI-Prüfungen, aber kein Produktionsdeployment. Alle Serverbefehle im Verzeichnis mit `artisan` ausführen. Bei einem Fehler anhalten; `php artisan up` erst nach erfolgreichen Prüfungen ausführen.
 
+Für den optionalen Outlook-/iCalendar-Import an `familie@aufbollen.ch` zusätzlich die [Einrichtung für E-Mail-Termine](docs/calendar-mail.md) durchführen. Das Upgrade ergänzt drei Datenbanktabellen und Composer-Pakete; es aktiviert den Postfachabruf nicht automatisch.
+
 ## 1. Hosting und Release vorbereiten
 
 - PHP 8.4 empfohlen, mindestens 8.3, mit Argon2id. CLI und Webserver müssen dieselbe geeignete PHP-Version verwenden. In Plesk den passenden PHP-Interpreter auswählen; gegebenenfalls in den Befehlen `php` durch dessen absoluten Pfad ersetzen.

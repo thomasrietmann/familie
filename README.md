@@ -4,6 +4,16 @@ Laravel-13-Anwendung für Familien, Termine und die Prüfung von Dokumentimporte
 
 Die ausführliche [Anleitung für Installation, Upgrade und Produktionsprüfung](INSTALLATION.md) enthält die Schritte für METANET, die Löschung vorhandener Originaldokumente und die Abnahme nach dem Deployment.
 
+## Outlook-Einladungen per E-Mail
+
+Unter **Einstellungen → E-Mail-Termine** kann jeder aktive Benutzer bis zu zehn persönliche Absenderadressen für seine Familie bestätigen und widerrufen. Einladungen gehen an **familie@aufbollen.ch**. Auch die Login-Adresse wird ausdrücklich per kurz gültigem E-Mail-Code bestätigt; Adressen sind accountübergreifend eindeutig. Die Einrichtung verlangt das aktuelle Passwort und die Zustimmung zur KI-Zuordnung.
+
+Der optionale IMAP-Abruf liest das dedizierte Postfach mit TLS, ohne Nachrichten zu verändern oder Outlook-Zusagen zu versenden. Er akzeptiert ausschliesslich bestätigte, aktive Absender und vom empfangenden Mailserver vertrauenswürdig bestätigtes DMARC. Betreff, Nachrichtentext, Terminbeschreibung und Familiennamen werden einmal pro Einladung über OpenAI mit `store=false` analysiert. Nur Personen der jeweiligen Familie sind zulässig; ohne eindeutige Person entsteht ein Familientermin. Datum, Zeit und Ort werden aus iCalendar gelesen. Neue Termine haben die Sichtbarkeit **Nur Eltern** und können anschliessend für Familienansichten freigegeben werden.
+
+UID, Organisator, Wiederholungsinstanz, SEQUENCE und DTSTAMP schützen vor Duplikaten und veralteten Änderungen. Aktualisierungen und Absagen werden verarbeitet; manuell gelöschte Termine bleiben gelöscht. Endliche Serien bis zu 366 Instanzen werden innerhalb des dokumentierten Regelumfangs vollständig importiert. Unbegrenzte oder nicht unterstützte Serien werden abgewiesen und im Importstatus angezeigt. Originalmails, Anhänge und KI-Rohantworten werden nicht in der Anwendung gespeichert; die Aufbewahrung im IMAP-Postfach ist separat einzurichten.
+
+Der Import ist standardmässig deaktiviert. [Einrichtung und Betriebsprüfung](docs/calendar-mail.md) beschreiben SMTP, IMAP, Cron und die erforderliche Bestätigung des Mailproviders.
+
 ## Voraussetzungen
 
 - PHP 8.3 oder neuer, bevorzugt 8.4; Argon2id-Unterstützung für Produktion.

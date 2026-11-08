@@ -40,6 +40,8 @@ class AppServiceProvider extends ServiceProvider
                     ->by(hash_hmac('sha256', $name.'|'.$identity, (string) config('app.key')));
             });
         }
+        RateLimiter::for('calendar-senders', fn (Request $request) => Limit::perHour(5)->by('calendar-senders:'.$request->user()->id));
+        RateLimiter::for('calendar-verification', fn (Request $request) => Limit::perMinutes(10, 10)->by('calendar-verification:'.$request->user()->id));
         if (app()->isProduction() && config('security.force_https')) {
             URL::forceScheme('https');
         }
