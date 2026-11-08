@@ -5,59 +5,93 @@ namespace App\Http\Controllers;
 use App\Models\FamilyEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class PrintController extends Controller
 {
-    private const COLUMN_COUNT = 3;
-
-    private const EVENTS_PER_COLUMN = 12;
-
     public function __invoke(Request $request): View
     {
         $family = $request->user()->managedFamily();
+        $month = $this->requestedMonth($request);
+        $periodEnd = $month->copy()->addMonths(2);
 
-        if (! $family) {
-            return view('print.index', [
-                'family' => null,
-                'events' => collect(),
-                'eventColumns' => $this->emptyColumns(),
-            ]);
-        }
-
-        $today = Carbon::today();
-
-        $events = $family->events()
-            ->where(function ($query) use ($today): void {
-                $query->where('starts_at', '>=', $today)
-                    ->orWhere(function ($query) use ($today): void {
-                        $query->whereNotNull('ends_at')
-                            ->where('ends_at', '>=', $today);
+        $events = $family ? $family->events()
+            ->where('starts_at', '<', $periodEnd)
+            ->where(function ($query) use ($month): void {
+                $query->where('ends_at', '>=', $month)
+                    ->orWhere(function ($query) use ($month): void {
+                        $query->whereNull('ends_at')->where('starts_at', '>=', $month);
                     });
             })
             ->orderBy('starts_at')
-            ->get()
-            ->sortBy(fn (FamilyEvent $event) => max($event->starts_at->timestamp, $today->timestamp))
-            ->values();
-        $printEvents = $events->take(self::EVENTS_PER_COLUMN * self::COLUMN_COUNT);
+            ->orderBy('id')
+            ->get() : collect();
+
+        $eventsByDate = collect();
+
+        foreach ($events as $event) {
+            $lastDay = $event->ends_at?->copy() ?? $event->starts_at->copy();
+
+            // All-day imports can use midnight of the following day as an exclusive end.
+            if ($event->all_day && $event->ends_at && $lastDay->greaterThan($event->starts_at)) {
+                $lastDay->subSecond();
+            }
+
+            $cursor = $event->starts_at->copy()->startOfDay()->max($month->copy());
+            $lastDay = $lastDay->min($periodEnd->copy()->subSecond())->startOfDay();
+
+            while ($cursor->lessThanOrEqualTo($lastDay)) {
+                $key = $cursor->toDateString();
+                if (! $eventsByDate->has($key)) {
+                    $eventsByDate->put($key, collect());
+                }
+                $eventsByDate->get($key)->push($event);
+                $cursor->addDay();
+            }
+        }
 
         return view('print.index', [
             'family' => $family,
-            'events' => $printEvents,
-            'eventColumns' => $this->eventColumns($printEvents),
+            'month' => $month,
+            'previousMonth' => $month->copy()->subMonths(2)->format('Y-m'),
+            'nextMonth' => $periodEnd->format('Y-m'),
+            'months' => collect([0, 1])->map(fn (int $offset) => $this->calendarMonth($month->copy()->addMonths($offset), $eventsByDate)),
+            'eventOwners' => $events->mapWithKeys(fn (FamilyEvent $event) => [$event->id => [
+                'name' => $event->ownerDisplayName(),
+                'color' => $event->ownerColorHex(),
+            ]]),
         ]);
     }
 
-    private function eventColumns($events)
+    private function requestedMonth(Request $request): Carbon
     {
-        return collect(range(0, self::COLUMN_COUNT - 1))
-            ->map(fn (int $column) => $events
-                ->slice($column * self::EVENTS_PER_COLUMN, self::EVENTS_PER_COLUMN)
-                ->values());
+        $value = $request->query('month');
+
+        if (is_string($value) && preg_match('/^[0-9]{4}-(0[1-9]|1[0-2])$/', $value)
+            && (int) substr($value, 0, 4) >= 1 && (int) substr($value, 0, 4) <= 9998) {
+            return Carbon::createFromFormat('!Y-m', $value);
+        }
+
+        return Carbon::today()->startOfMonth();
     }
 
-    private function emptyColumns()
+    private function calendarMonth(Carbon $month, Collection $eventsByDate): array
     {
-        return collect(range(1, self::COLUMN_COUNT))->map(fn () => collect());
+        $cursor = $month->copy()->startOfWeek(Carbon::MONDAY);
+        $gridEnd = $month->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+        $days = collect();
+
+        while ($cursor->lessThanOrEqualTo($gridEnd)) {
+            $isCurrentMonth = $cursor->isSameMonth($month);
+            $days->push([
+                'date' => $cursor->copy(),
+                'is_current_month' => $isCurrentMonth,
+                'events' => $isCurrentMonth ? $eventsByDate->get($cursor->toDateString(), collect()) : collect(),
+            ]);
+            $cursor->addDay();
+        }
+
+        return ['date' => $month, 'weeks' => $days->chunk(7)];
     }
 }

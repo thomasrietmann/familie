@@ -5,7 +5,10 @@
             <p class="mt-2 text-sm text-stone-600">{{ $family?->name ?? 'Noch keine Familie verbunden' }}</p>
         </div>
         @if($family)
-            <a href="{{ route('families.events.create', $family) }}" class="inline-flex items-center justify-center rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700">Termin erfassen</a>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('print', ['month' => $month->format('Y-m')]) }}" class="inline-flex items-center justify-center rounded-md border border-stone-300 px-4 py-2 text-sm font-medium hover:bg-stone-50">Zwei Monate drucken</a>
+                <a href="{{ route('families.events.create', $family) }}" class="inline-flex items-center justify-center rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700">Termin erfassen</a>
+            </div>
         @endif
     </div>
 
