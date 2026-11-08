@@ -9,21 +9,21 @@
         :root { color-scheme: light; }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         body { margin: 0; background: #f6f7f4; color: #1c1917; font-family: Arial, Helvetica, sans-serif; }
-        .toolbar { max-width: {{ $orientation === 'portrait' ? '210' : '297' }}mm; margin: 0 auto; padding: 16px 0; }
+        .toolbar { max-width: 210mm; margin: 0 auto; padding: 16px 0; }
         .toolbar-row, .month-picker, .toolbar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
         .toolbar-row { justify-content: space-between; margin-bottom: 12px; }
         .toolbar-hint { color: #57534e; font-size: 13px; line-height: 1.5; margin: 12px 0 0; }
         .month-picker label { font-size: 14px; font-weight: 600; }
-        .button, input, select { border: 1px solid #d6d3d1; border-radius: 6px; background: white; color: #1c1917; font: inherit; font-size: 14px; padding: 8px 12px; }
+        .button, input { border: 1px solid #d6d3d1; border-radius: 6px; background: white; color: #1c1917; font: inherit; font-size: 14px; padding: 8px 12px; }
         .button { cursor: pointer; font-weight: 600; text-decoration: none; }
         .button-primary { background: #1c1917; border-color: #1c1917; color: white; }
         :focus-visible { outline: 2px solid #0f766e; outline-offset: 3px; }
         .preview { overflow-x: auto; padding: 0 16px 24px; }
-        .page { width: {{ $orientation === 'portrait' ? '210' : '297' }}mm; min-height: {{ $orientation === 'portrait' ? '297' : '210' }}mm; margin: 0 auto 24px; background: white; padding: 10mm; box-shadow: 0 8px 24px rgb(28 25 23 / 12%); }
+        .page { width: 210mm; min-height: 297mm; margin: 0 auto 24px; background: white; padding: 10mm; box-shadow: 0 8px 24px rgb(28 25 23 / 12%); }
         .page-header { display: flex; align-items: end; justify-content: space-between; gap: 5mm; margin-bottom: 5mm; }
         .month-title { margin: 0; font-size: 22pt; line-height: 1.1; }
         .page-number { margin: 0; color: #57534e; font-size: 8pt; white-space: nowrap; }
-        .calendar { border-collapse: collapse; table-layout: fixed; width: 100%; height: {{ $orientation === 'portrait' ? '247' : '160' }}mm; }
+        .calendar { border-collapse: collapse; table-layout: fixed; width: 100%; height: 247mm; }
         .calendar th { height: 8mm; padding: 2mm 0; background: #f0f3ef; border: 1px solid #b9c2b7; font-size: 8pt; text-align: center; }
         .calendar td { width: 14.2857%; border: 1px solid #c9cec6; padding: 1.7mm; vertical-align: top; }
         .calendar .weekend { background: #f8f9f6; }
@@ -38,14 +38,14 @@
         .owner-dot { display: inline-block; width: 2mm; height: 2mm; margin-right: 0.5mm; border-radius: 50%; vertical-align: baseline; }
         .owner-dot-rainbow { background: conic-gradient(#ef4444, #f59e0b, #eab308, #22c55e, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #ef4444); }
         .page-footer { margin: 3mm 0 0; color: #57534e; font-size: 7pt; }
-        .empty { max-width: {{ $orientation === 'portrait' ? '210' : '297' }}mm; margin: 24px auto; padding: 24px; background: white; }
+        .empty { max-width: 210mm; margin: 24px auto; padding: 24px; background: white; }
         @media screen and (max-width: 850px) { .toolbar { padding: 16px; } }
-        @page { size: A4 {{ $orientation }}; margin: 10mm; }
+        @page { size: A4 portrait; margin: 10mm; }
         @media print {
             body { background: white; }
             .toolbar { display: none; }
             .preview { overflow: visible; padding: 0; }
-            .page { width: {{ $orientation === 'portrait' ? '190' : '277' }}mm; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+            .page { width: 190mm; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
             .page + .page { break-before: page; }
             .calendar tr { break-inside: avoid; }
         }
@@ -65,20 +65,15 @@
         </div>
         @if($family)
             <div class="toolbar-row">
-                <a class="button" href="{{ route('print', ['month' => $previousMonth, 'orientation' => $orientation]) }}" aria-label="Vorherige zwei Monate">← Zurück</a>
+                <a class="button" href="{{ route('print', ['month' => $previousMonth]) }}" aria-label="Vorherige zwei Monate">← Zurück</a>
                 <form class="month-picker" method="GET" action="{{ route('print') }}">
                     <label for="print-month">Startmonat</label>
                     <input id="print-month" type="month" name="month" value="{{ $month->format('Y-m') }}" required>
-                    <label for="print-orientation">Format</label>
-                    <select id="print-orientation" name="orientation">
-                        <option value="landscape" @selected($orientation === 'landscape')>Querformat</option>
-                        <option value="portrait" @selected($orientation === 'portrait')>Hochformat</option>
-                    </select>
                     <button class="button" type="submit">Anzeigen</button>
                 </form>
-                <a class="button" href="{{ route('print', ['month' => $nextMonth, 'orientation' => $orientation]) }}" aria-label="Nächste zwei Monate">Weiter →</a>
+                <a class="button" href="{{ route('print', ['month' => $nextMonth]) }}" aria-label="Nächste zwei Monate">Weiter →</a>
             </div>
-            <p class="toolbar-hint">{{ $month->translatedFormat('F Y') }} und {{ $month->copy()->addMonth()->translatedFormat('F Y') }} · Je Monat eine A4-Seite im {{ $orientation === 'portrait' ? 'Hochformat' : 'Querformat' }}. Im Druckdialog Skalierung 100 % wählen und Kopf- und Fusszeilen ausschalten.</p>
+            <p class="toolbar-hint">{{ $month->translatedFormat('F Y') }} und {{ $month->copy()->addMonth()->translatedFormat('F Y') }} · Je Monat eine A4-Seite im Hochformat. Im Druckdialog Skalierung 100 % wählen und Kopf- und Fusszeilen ausschalten.</p>
         @endif
     </div>
 

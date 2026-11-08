@@ -13,22 +13,6 @@ class PrintCalendarTest extends TestCase
 {
     use CreatesFamily, RefreshDatabase;
 
-    public function test_orientation_defaults_to_landscape_and_is_preserved_when_navigating(): void
-    {
-        $family = $this->familyFor();
-        $this->actingAs($family->owner);
-
-        foreach (['', '&orientation=invalid', '&orientation[]=portrait'] as $query) {
-            $this->get('/print?month=2026-11'.$query)->assertOk()
-                ->assertViewHas('orientation', 'landscape')->assertSee('size: A4 landscape;', false);
-        }
-
-        $this->get('/print?month=2026-11&orientation=portrait')->assertOk()
-            ->assertViewHas('orientation', 'portrait')->assertSee('size: A4 portrait;', false)
-            ->assertSee(route('print', ['month' => '2026-09', 'orientation' => 'portrait']))
-            ->assertSee(route('print', ['month' => '2027-01', 'orientation' => 'portrait']));
-    }
-
     public function test_default_print_contains_two_complete_months_including_past_days(): void
     {
         $this->travelTo(Carbon::parse('2026-11-08 12:00:00'));
