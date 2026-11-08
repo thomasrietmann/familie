@@ -7,6 +7,9 @@
     @unless(config('calendar_mail.enabled'))
         <div class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">Der Postfachabruf ist noch nicht aktiviert. Bestätigte Absenderadressen sind nach der Einrichtung verwendbar.</div>
     @endunless
+    @unless(config('calendar_mail.require_authentication', true))
+        <div class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">Die Mailserver-Prüfung ist deaktiviert. Es werden bestätigte Absenderadressen verwendet, die Absenderangabe eingehender Nachrichten kann jedoch gefälscht sein.</div>
+    @endunless
     <div class="grid gap-6 lg:grid-cols-2">
         <x-card>
             <h2 class="text-lg font-semibold">Meine Absenderadressen</h2>
@@ -70,7 +73,7 @@
         </x-card>
         <x-card class="lg:col-span-2">
             <h2 class="text-lg font-semibold">Meine letzten Eingänge</h2>
-            <p class="mt-2 text-sm text-stone-600">Hier erscheinen Nachrichten, deren bestätigter Absender erfolgreich authentifiziert wurde. Nicht authentifizierte oder unbekannte Absender werden abgewiesen.</p>
+            <p class="mt-2 text-sm text-stone-600">Hier erscheinen Nachrichten deiner bestätigten Absenderadressen. Unbekannte Absender werden abgewiesen. Bei aktivierter Mailserver-Prüfung muss zusätzlich die Authentifizierung erfolgreich sein.</p>
             <div class="mt-4 space-y-2">
                 @forelse($receipts as $receipt)
                     <div class="flex flex-wrap justify-between gap-2 rounded-md bg-stone-50 p-3 text-sm">

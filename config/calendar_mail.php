@@ -2,6 +2,7 @@
 
 return [
     'enabled' => (bool) env('CALENDAR_MAIL_ENABLED', false),
+    'require_authentication' => (bool) env('CALENDAR_MAIL_REQUIRE_AUTHENTICATION', true),
     'address' => env('CALENDAR_MAIL_ADDRESS', 'familie@aufbollen.ch'),
     'host' => env('CALENDAR_MAIL_HOST'),
     'port' => (int) env('CALENDAR_MAIL_PORT', 993),

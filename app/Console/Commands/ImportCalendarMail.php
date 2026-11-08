@@ -24,7 +24,7 @@ class ImportCalendarMail extends Command
 
             return self::SUCCESS;
         }
-        if (! config('calendar_mail.host') || ! config('calendar_mail.password') || ! config('calendar_mail.trusted_authserv_ids') || ! config('services.openai.api_key')) {
+        if (! config('calendar_mail.host') || ! config('calendar_mail.password') || (config('calendar_mail.require_authentication', true) && ! config('calendar_mail.trusted_authserv_ids')) || ! config('services.openai.api_key')) {
             $this->error('E-Mail-Terminimport ist unvollständig konfiguriert.');
 
             return self::FAILURE;

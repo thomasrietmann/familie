@@ -85,4 +85,15 @@ class CalendarMailPollingTest extends TestCase
         $this->assertDatabaseCount('calendar_mail_events', 1);
         $this->assertDatabaseCount('family_events', 1);
     }
+
+    public function test_explicitly_disabled_authentication_allows_import_without_trusted_mailserver(): void
+    {
+        $this->senderFor($this->familyFor());
+        $this->fakeAssignment();
+        $this->configuredMailbox();
+        config(['calendar_mail.require_authentication' => false, 'calendar_mail.trusted_authserv_ids' => []]);
+        $this->artisan('calendar-mail:poll')->assertSuccessful();
+        $this->assertDatabaseCount('family_events', 1);
+        $this->assertSame('processed', CalendarMailReceipt::sole()->status);
+    }
 }

@@ -38,6 +38,9 @@ class MessageParser
 
     public function authenticate(IMessage $message, string $sender): void
     {
+        if (! config('calendar_mail.require_authentication', true)) {
+            return;
+        }
         $trusted = array_map('strtolower', config('calendar_mail.trusted_authserv_ids', []));
         $results = [];
         foreach ($message->getAllHeadersByName('Authentication-Results') as $header) {

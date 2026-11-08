@@ -14,6 +14,8 @@ UID, Organisator, Wiederholungsinstanz, SEQUENCE und DTSTAMP schützen vor Dupli
 
 Der Import ist standardmässig deaktiviert. [Einrichtung und Betriebsprüfung](docs/calendar-mail.md) beschreiben SMTP, IMAP, Cron und die erforderliche Bestätigung des Mailproviders.
 
+Die DMARC-Prüfung lässt sich ausdrücklich mit `CALENDAR_MAIL_REQUIRE_AUTHENTICATION=false` abschalten. Die Adressbestätigung bleibt erforderlich, eingehende From-Adressen sind dann aber nicht gegen Fälschung geschützt. Anschliessend `php artisan config:clear` ausführen.
+
 ## Voraussetzungen
 
 - PHP 8.3 oder neuer, bevorzugt 8.4; Argon2id-Unterstützung für Produktion.

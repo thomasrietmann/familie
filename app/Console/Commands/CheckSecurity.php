@@ -29,7 +29,11 @@ class CheckSecurity extends Command
         ];
         if (config('calendar_mail.enabled')) {
             $checks['E-Mail-Terminimport vollständig konfiguriert'] = filled(config('calendar_mail.host')) && filled(config('calendar_mail.username')) && filled(config('calendar_mail.password')) && filled(config('services.openai.api_key')) && filter_var(config('calendar_mail.address'), FILTER_VALIDATE_EMAIL);
-            $checks['Vertrauenswürdige Mailauthentifizierung konfiguriert'] = count(config('calendar_mail.trusted_authserv_ids', [])) > 0;
+            if (config('calendar_mail.require_authentication', true)) {
+                $checks['Vertrauenswürdige Mailauthentifizierung konfiguriert'] = count(config('calendar_mail.trusted_authserv_ids', [])) > 0;
+            } else {
+                $this->warn('HINWEIS: Mailauthentifizierung ist deaktiviert; From-Adressen können gefälscht sein.');
+            }
             $checks['Bestätigungsmails über TLS-SMTP'] = config('mail.default') === 'smtp' && in_array(config('mail.mailers.smtp.scheme'), ['smtp', 'smtps'], true) && config('mail.mailers.smtp.require_tls') && filled(config('mail.mailers.smtp.host')) && filled(config('mail.mailers.smtp.username')) && filled(config('mail.mailers.smtp.password'));
         }
         try {

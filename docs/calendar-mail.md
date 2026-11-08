@@ -34,6 +34,8 @@ IMAP verwendet ausschliesslich implizites TLS mit Zertifikatsprüfung. SMTP verw
 
 ## Vertrauenswürdige Absenderprüfung
 
+Die Mailserver-Prüfung kann ausdrücklich mit `CALENDAR_MAIL_REQUIRE_AUTHENTICATION=false` in der bestehenden `.env` deaktiviert werden. Danach `php artisan config:clear` ausführen. In diesem Modus darf `CALENDAR_MAIL_TRUSTED_AUTHSERV_IDS` leer bleiben. Persönliche Absenderadressen müssen weiterhin per Code bestätigt sein und einem aktiven Familienaccount gehören. Die From-Adresse einer eingehenden Mail ist dann jedoch nicht authentifiziert und kann gefälscht werden. `security:check` zeigt deshalb einen Hinweis. Standardmässig bleibt die Prüfung aktiviert (`true`); die folgenden Anforderungen gelten für diesen Standardmodus.
+
 Ein sichtbares `From` und die einmalige Adressbestätigung allein verhindern keine gefälschten Nachrichten. Der Import verlangt deshalb **DMARC=pass** mit genau der Domain des einzigen äusseren From-Absenders aus einem vertrauenswürdigen `Authentication-Results`-Header. SPF allein, fremde Authentication-Results, mehrere From-Adressen sowie widersprüchliche/doppelte lokale Authentifizierungsergebnisse werden abgewiesen. DMARC authentifiziert die Domain; die Durchsetzung zulässiger Absender innerhalb dieser Domain liegt zusätzlich beim sendenden Provider.
 
 Beim empfangenden Provider ausdrücklich bestätigen lassen:
