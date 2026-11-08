@@ -34,6 +34,7 @@ class InvitationParser
         if (! $calendar instanceof VCalendar) {
             throw new RejectedMail('invalid_calendar');
         }
+        $this->normalizeOutlookTimezone($calendar);
         $method = strtoupper((string) ($calendar->METHOD ?? 'PUBLISH'));
         if (! in_array($method, ['REQUEST', 'PUBLISH', 'CANCEL'], true)) {
             throw new RejectedMail('invalid_calendar');
@@ -162,6 +163,50 @@ class InvitationParser
 
         // Compare revision stamps in UTC, including during the repeated hour at DST fall-back.
         return ['key' => $this->occurrence($event), 'sequence' => (int) $sequence, 'revision_at' => $this->date($event->DTSTAMP)->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'), 'cancelled' => $cancelled, 'data' => $data];
+    }
+
+    private function normalizeOutlookTimezone(VCalendar $calendar): void
+    {
+        // Exchange emits this unnamed zone with explicit modern Central European rules.
+        // Match the complete supported definition, never infer a zone from its label alone.
+        $zones = array_values(array_filter($calendar->select('VTIMEZONE'), fn ($zone) => (string) $zone->TZID === 'Customized Time Zone'));
+        if (count($zones) !== 1) {
+            return;
+        }
+        $zone = $zones[0];
+        foreach (['STANDARD' => ['+0200', '+0100', '16010101T030000', '10'], 'DAYLIGHT' => ['+0100', '+0200', '16010101T020000', '3']] as $type => [$from, $to, $start, $month]) {
+            $parts = array_values($zone->select($type));
+            if (count($parts) !== 1) {
+                return;
+            }
+            $part = $parts[0];
+            foreach (['TZOFFSETFROM', 'TZOFFSETTO', 'DTSTART', 'RRULE'] as $property) {
+                if (count($part->select($property)) !== 1) {
+                    return;
+                }
+            }
+            $rule = $part->RRULE->getParts();
+            $rule['INTERVAL'] ??= '1';
+            if ((string) $part->TZOFFSETFROM !== $from || (string) $part->TZOFFSETTO !== $to || (string) $part->DTSTART !== $start
+                || $rule != ['FREQ' => 'YEARLY', 'INTERVAL' => '1', 'BYDAY' => '-1SU', 'BYMONTH' => $month]
+                || isset($part->RDATE) || isset($part->EXDATE)) {
+                return;
+            }
+        }
+        foreach ($calendar->select('VEVENT') as $event) {
+            foreach (['DTSTART', 'DTEND', 'RECURRENCE-ID', 'EXDATE', 'RDATE'] as $property) {
+                foreach ($event->select($property) as $date) {
+                    if ((string) $date['TZID'] === 'Customized Time Zone') {
+                        foreach ($date->getParts() as $value) {
+                            if ((int) substr($value, 0, 4) < 1996) {
+                                throw new RejectedMail('invalid_calendar');
+                            }
+                        }
+                        $date['TZID'] = 'Europe/Zurich';
+                    }
+                }
+            }
+        }
     }
 
     /** Restrict combinations before expanding untrusted rules; some legal but impossible rules never converge. */

@@ -13,6 +13,23 @@ class CalendarMailParsingTest extends TestCase
 {
     use CreatesCalendarMail;
 
+    public function test_exchange_custom_timezone_preserves_winter_and_summer_times(): void
+    {
+        $ics = file_get_contents(__DIR__.'/../Fixtures/outlook-custom-timezone.ics');
+        foreach (['20261121' => '2026-11-21', '20260721' => '2026-07-21'] as $date => $expected) {
+            $result = (new InvitationParser)->parse(str_replace('20261121', (string) $date, $ics), 'parent@example.org');
+            $this->assertSame($expected.' 11:00:00', $result['items'][0]['data']['starts_at']);
+            $this->assertSame($expected.' 19:00:00', $result['items'][0]['data']['ends_at']);
+        }
+    }
+
+    public function test_custom_timezone_with_different_rules_is_not_assumed_to_be_swiss(): void
+    {
+        $ics = file_get_contents(__DIR__.'/../Fixtures/outlook-custom-timezone.ics');
+        $this->expectException(RejectedMail::class);
+        (new InvitationParser)->parse(str_replace('BYMONTH=10', 'BYMONTH=11', $ics), 'parent@example.org');
+    }
+
     #[DataProvider('untrustedAuthentication')]
     public function test_sender_authentication_fails_closed(string $authentication): void
     {
