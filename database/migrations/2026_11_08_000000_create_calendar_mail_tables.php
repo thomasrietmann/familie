@@ -14,7 +14,8 @@ return new class extends Migration
             $table->foreignId('family_id')->constrained()->cascadeOnDelete();
             $table->string('email', 254)->unique();
             $table->timestamp('verified_at')->nullable();
-            $table->timestamp('consented_at');
+            // Required explicit consent time; avoid legacy MySQL TIMESTAMP zero-date defaults.
+            $table->dateTime('consented_at');
             $table->string('verification_hash', 64)->nullable();
             $table->timestamp('verification_expires_at')->nullable();
             $table->unsignedTinyInteger('verification_attempts')->default(0);
