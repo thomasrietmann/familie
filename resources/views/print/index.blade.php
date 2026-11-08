@@ -123,9 +123,6 @@
                                                         <div class="event-meta">
                                                             <span class="owner-dot {{ $event->isForFamily() ? 'owner-dot-rainbow' : '' }}" @unless($event->isForFamily()) style="background-color: {{ $eventOwners[$event->id]['color'] }}" @endunless></span>{{ $eventOwners[$event->id]['name'] }}
                                                         </div>
-                                                        @if($event->location)
-                                                            <div class="event-meta">{{ $event->location }}</div>
-                                                        @endif
                                                         @if($event->status === 'cancelled')
                                                             <div class="event-meta">Abgesagt</div>
                                                         @endif
