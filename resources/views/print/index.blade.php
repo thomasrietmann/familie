@@ -21,7 +21,6 @@
         .preview { overflow-x: auto; padding: 0 16px 24px; }
         .page { width: 210mm; min-height: 297mm; margin: 0 auto 24px; background: white; padding: 10mm; box-shadow: 0 8px 24px rgb(28 25 23 / 12%); }
         .page-header { display: flex; align-items: end; justify-content: space-between; gap: 5mm; margin-bottom: 5mm; }
-        .family-name { margin: 0 0 2mm; color: #57534e; font-size: 10pt; overflow-wrap: anywhere; }
         .month-title { margin: 0; font-size: 22pt; line-height: 1.1; }
         .page-number { margin: 0; color: #57534e; font-size: 8pt; white-space: nowrap; }
         .calendar { border-collapse: collapse; table-layout: fixed; width: 100%; height: 247mm; }
@@ -89,10 +88,7 @@
             @foreach($months as $calendarMonth)
                 <section class="page" aria-label="{{ $calendarMonth['date']->translatedFormat('F Y') }}">
                     <header class="page-header">
-                        <div>
-                            <p class="family-name">{{ $family->name }}</p>
-                            <h1 class="month-title">{{ $calendarMonth['date']->translatedFormat('F Y') }}</h1>
-                        </div>
+                        <h1 class="month-title">{{ $calendarMonth['date']->translatedFormat('F Y') }}</h1>
                         <p class="page-number">Monat {{ $loop->iteration }} / 2</p>
                     </header>
                     <table class="calendar" aria-label="Kalender {{ $calendarMonth['date']->translatedFormat('F Y') }}">
@@ -112,17 +108,17 @@
                                                 <time class="day-number" datetime="{{ $day['date']->toDateString() }}">{{ $day['date']->day }}</time>
                                                 @foreach($day['events'] as $event)
                                                     <article class="event {{ $event->status === 'cancelled' ? 'cancelled' : '' }}">
-                                                        <div class="event-time">
-                                                            @if($event->all_day)
-                                                                Ganztägig
-                                                            @elseif($event->starts_at->isSameDay($day['date']))
-                                                                {{ $event->starts_at->format('H:i') }}@if($event->ends_at && $event->ends_at->isSameDay($day['date']))–{{ $event->ends_at->format('H:i') }}@endif
-                                                            @elseif($event->ends_at && $event->ends_at->isSameDay($day['date']))
-                                                                bis {{ $event->ends_at->format('H:i') }}
-                                                            @else
-                                                                Fortsetzung
-                                                            @endif
-                                                        </div>
+                                                        @unless($event->all_day)
+                                                            <div class="event-time">
+                                                                @if($event->starts_at->isSameDay($day['date']))
+                                                                    {{ $event->starts_at->format('H:i') }}@if($event->ends_at && $event->ends_at->isSameDay($day['date']))–{{ $event->ends_at->format('H:i') }}@endif
+                                                                @elseif($event->ends_at && $event->ends_at->isSameDay($day['date']))
+                                                                    bis {{ $event->ends_at->format('H:i') }}
+                                                                @else
+                                                                    Fortsetzung
+                                                                @endif
+                                                            </div>
+                                                        @endunless
                                                         <div class="event-title">{{ $event->title }}</div>
                                                         <div class="event-meta">
                                                             <span class="owner-dot {{ $event->isForFamily() ? 'owner-dot-rainbow' : '' }}" @unless($event->isForFamily()) style="background-color: {{ $eventOwners[$event->id]['color'] }}" @endunless></span>{{ $eventOwners[$event->id]['name'] }}
