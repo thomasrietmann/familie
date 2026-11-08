@@ -17,11 +17,21 @@ class InvitationImporter
     {
         $message = $this->messages->parse($raw);
         $email = $this->messages->sender($message);
-        $sender = CalendarSenderAddress::where('email', $email)->whereNotNull('verified_at')->first();
+        $replyTo = $this->messages->replyTo($message);
+        $candidates = CalendarSenderAddress::whereIn('email', array_filter([$email, $replyTo]))->whereNotNull('verified_at')->get();
+        if ($candidates->map(fn ($address) => $address->user_id.':'.$address->family_id)->unique()->count() > 1) {
+            throw new RejectedMail('ambiguous_sender');
+        }
+        $sender = $candidates->firstWhere('email', $email) ?? $candidates->firstWhere('email', $replyTo);
         if (! $sender || ! $sender->user->activeFamilies()->whereKey($sender->family_id)->exists()) {
             throw new RejectedMail('unknown_sender');
         }
         $this->messages->authenticate($message, $email);
+        // DMARC authenticates From, not Reply-To. Cross-address routing needs an explicitly trusted provider.
+        if ($sender->email !== $email && config('calendar_mail.require_authentication', true)
+            && ! in_array($email, config('calendar_mail.reply_to_senders', []), true)) {
+            throw new RejectedMail('authentication_failed');
+        }
         $receipt->update(['family_id' => $sender->family_id, 'user_id' => $sender->user_id]);
         $mail = $this->messages->invitation($message);
         $invitation = $this->calendars->parse($mail['calendar'], $email);

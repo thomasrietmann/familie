@@ -3,6 +3,7 @@
 return [
     'enabled' => (bool) env('CALENDAR_MAIL_ENABLED', false),
     'require_authentication' => (bool) env('CALENDAR_MAIL_REQUIRE_AUTHENTICATION', true),
+    'reply_to_senders' => array_values(array_filter(array_map(fn ($email) => strtolower(trim($email)), explode(',', (string) env('CALENDAR_MAIL_REPLY_TO_SENDERS', ''))))),
     'address' => env('CALENDAR_MAIL_ADDRESS', 'familie@aufbollen.ch'),
     'host' => env('CALENDAR_MAIL_HOST'),
     'port' => (int) env('CALENDAR_MAIL_PORT', 993),

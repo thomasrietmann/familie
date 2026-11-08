@@ -36,6 +36,23 @@ class MessageParser
         return $sender;
     }
 
+    public function replyTo(IMessage $message): ?string
+    {
+        $headers = $message->getAllHeadersByName('Reply-To');
+        if ($headers === []) {
+            return null;
+        }
+        if (count($headers) !== 1 || ! $headers[0] instanceof AddressHeader || count($headers[0]->getAddresses()) !== 1) {
+            throw new RejectedMail('ambiguous_sender');
+        }
+        $email = strtolower($headers[0]->getEmail() ?? '');
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new RejectedMail('ambiguous_sender');
+        }
+
+        return $email;
+    }
+
     public function authenticate(IMessage $message, string $sender): void
     {
         if (! config('calendar_mail.require_authentication', true)) {

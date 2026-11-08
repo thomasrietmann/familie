@@ -18,6 +18,58 @@ class CalendarMailImportTest extends TestCase
 {
     use CreatesCalendarMail, CreatesFamily, RefreshDatabase;
 
+    public function test_verified_reply_to_routes_calendar_service_mail_when_authentication_is_disabled(): void
+    {
+        $family = $this->familyFor();
+        $this->senderFor($family);
+        $this->fakeAssignment();
+        config(['calendar_mail.require_authentication' => false]);
+        $raw = "Reply-To: parent@example.org\r\n".$this->mail($this->calendar(), 'calendar@provider.example');
+        $this->assertSame('imported', app(InvitationImporter::class)->import($raw, $this->receipt()));
+        $this->assertSame($family->id, FamilyEvent::sole()->family_id);
+    }
+
+    public function test_reply_to_cannot_cross_accounts(): void
+    {
+        $this->senderFor($this->familyFor());
+        $this->senderFor($this->familyFor(), 'other@example.org');
+        $this->fakeAssignment();
+        config(['calendar_mail.require_authentication' => false]);
+        $this->expectExceptionMessage('ambiguous_sender');
+        app(InvitationImporter::class)->import("Reply-To: other@example.org\r\n".$this->mail($this->calendar()), $this->receipt());
+    }
+
+    public function test_dmarc_pass_alone_does_not_authorize_reply_to_routing(): void
+    {
+        $this->senderFor($this->familyFor());
+        $this->fakeAssignment();
+        $raw = "Reply-To: parent@example.org\r\n".$this->mail($this->calendar(), 'calendar@example.org');
+        try {
+            app(InvitationImporter::class)->import($raw, $this->receipt());
+            $this->fail('Expected provider authorization requirement');
+        } catch (RejectedMail $e) {
+            $this->assertSame('authentication_failed', $e->reason);
+        }
+        Http::assertNothingSent();
+        config(['calendar_mail.reply_to_senders' => ['calendar@example.org']]);
+        $this->assertSame('imported', app(InvitationImporter::class)->import($raw, $this->receipt()));
+    }
+
+    public function test_unverified_and_multiple_reply_to_addresses_are_rejected(): void
+    {
+        $this->fakeAssignment();
+        config(['calendar_mail.require_authentication' => false]);
+        foreach (['unknown@example.org' => 'unknown_sender', 'one@example.org, two@example.org' => 'ambiguous_sender'] as $replyTo => $reason) {
+            try {
+                app(InvitationImporter::class)->import("Reply-To: $replyTo\r\n".$this->mail($this->calendar()), $this->receipt());
+                $this->fail('Expected rejection');
+            } catch (RejectedMail $e) {
+                $this->assertSame($reason, $e->reason);
+            }
+        }
+        Http::assertNothingSent();
+    }
+
     public function test_invitation_is_parsed_deterministically_and_ai_assigns_only_family_members(): void
     {
         $family = $this->familyFor();

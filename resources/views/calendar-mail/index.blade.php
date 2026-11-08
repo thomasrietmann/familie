@@ -63,7 +63,7 @@
         <x-card class="lg:col-span-2">
             <h2 class="text-lg font-semibold">So funktioniert der Import</h2>
             <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-stone-600">
-                <li>Sende eine Outlook-Einladung oder eine Nachricht mit genau einer .ics-Kalenderdatei von deiner bestätigten Adresse. Bei Weiterleitungen zählt die äussere Absenderadresse.</li>
+                <li>Sende eine Einladung oder eine Nachricht mit genau einer .ics-Kalenderdatei. Dein Account wird über die bestätigte Absenderadresse oder, bei Versand durch einen Kalenderdienst, über die bestätigte „Antwort an“-Adresse erkannt. Unterschiedliche Accounts in diesen beiden Feldern werden abgewiesen.</li>
                 <li>OpenAI sucht eine eindeutige Person in deiner Familie. Ohne eindeutige Zuordnung entsteht ein Familientermin. Du kannst die Zuordnung danach bearbeiten.</li>
                 <li>Neue Termine sind zunächst „Nur Eltern“ sichtbar. Die Freigabe für Familienansichten kannst du am Termin ändern.</li>
                 <li>Aktualisierungen und Absagen derselben Einladung werden übernommen. Manuell gelöschte Termine bleiben gelöscht. Weitere Einladungen können Titel, Zeit und Personenzuordnung aktualisieren.</li>

@@ -16,6 +16,7 @@ class CalendarMailReceipt extends Model
     public function resultLabel(): string
     {
         return match ($this->result_code) {
+            'ambiguous_sender' => 'Absender und Antwortadresse sind nicht eindeutig zuordenbar',
             'imported' => 'Termin übernommen oder aktualisiert',
             'cancelled' => 'Absage übernommen',
             'unchanged' => 'Bereits verarbeitet oder ältere Version',
