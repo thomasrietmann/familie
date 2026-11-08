@@ -17,21 +17,34 @@ class FamilyEventController extends Controller
     public function index(Request $request, Family $family): View
     {
         $this->authorize('view', $family);
-        $request->validate(['category' => ['nullable', 'string', 'in:'.implode(',', FamilyEvent::CATEGORIES)], 'status' => ['nullable', 'in:planned,confirmed,cancelled'], 'visibility' => ['nullable', 'in:family,parents_only'], 'from' => ['nullable', 'date'], 'to' => ['nullable', 'date']]);
+        $request->validate([
+            'category' => ['nullable', 'string', 'in:'.implode(',', FamilyEvent::CATEGORIES)],
+            'status' => ['nullable', 'in:planned,confirmed,cancelled'],
+            'visibility' => ['nullable', 'in:family,parents_only'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+            'period' => ['nullable', 'string', 'in:upcoming,past'],
+        ]);
+
+        $today = Carbon::today();
+        $showPast = $request->query('period') === 'past';
+        $sortDirection = $showPast ? 'desc' : 'asc';
 
         $events = $family->events()
+            ->where('starts_at', $showPast ? '<' : '>=', $today)
             ->when($request->filled('category'), fn ($query) => $query->where('category', $request->category))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
             ->when($request->filled('visibility'), fn ($query) => $query->where('visibility', $request->visibility))
             ->when($request->filled('from'), fn ($query) => $query->where('starts_at', '>=', Carbon::parse($request->from)->startOfDay()))
             ->when($request->filled('to'), fn ($query) => $query->where('starts_at', '<=', Carbon::parse($request->to)->endOfDay()))
-            ->orderBy('starts_at')
+            ->orderBy('starts_at', $sortDirection)
+            ->orderBy('id', $sortDirection)
             ->paginate(20)
             ->withQueryString();
 
         $family->load(['children', 'activeParents']);
 
-        return view('events.index', compact('family', 'events'));
+        return view('events.index', compact('family', 'events', 'today', 'showPast'));
     }
 
     public function create(Family $family): View
