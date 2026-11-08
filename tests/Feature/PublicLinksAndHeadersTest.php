@@ -53,6 +53,60 @@ class PublicLinksAndHeadersTest extends TestCase
         }
     }
 
+    public function test_only_public_share_pages_allow_configured_frame_origins(): void
+    {
+        config(['security.public_frame_origins' => ' http://homeassistant.local:8123, https://ha.example.test ']);
+        $family = $this->familyFor();
+        $urls = [
+            route('public.family', $family->generatePublicToken()),
+            route('public.dashboard', $family->generateDashboardPublicToken()),
+        ];
+        $defaultPolicy = $this->get('/login')->headers->get('Content-Security-Policy');
+        $expectedPolicy = str_replace("frame-ancestors 'none'", 'frame-ancestors http://homeassistant.local:8123 https://ha.example.test', $defaultPolicy);
+        // Navigation requests need no Origin header. Untrusted headers must never expand the policy.
+        foreach ([[], ['Origin' => 'https://untrusted.example.test', 'Referer' => 'https://untrusted.example.test/']] as $headers) {
+            foreach ($urls as $url) {
+                $this->get($url, $headers)->assertOk()
+                    ->assertHeader('Content-Security-Policy', $expectedPolicy)
+                    ->assertHeaderMissing('X-Frame-Options')
+                    ->assertHeader('Cache-Control', 'no-store, private')
+                    ->assertHeader('Referrer-Policy', 'no-referrer');
+            }
+        }
+        $this->actingAs($family->owner);
+        foreach (['/login', '/dashboard', '/calendar', '/missing-page', '/public/family/invalid-test-token', '/public/dashboard/invalid-test-token', '/public/family/invalid-test-token/extra'] as $url) {
+            $this->get($url)->assertHeader('X-Frame-Options', 'DENY')
+                ->assertHeader('Content-Security-Policy', $defaultPolicy);
+        }
+    }
+
+    public function test_empty_or_invalid_frame_allowlist_fails_closed(): void
+    {
+        $family = $this->familyFor();
+        $urls = [
+            route('public.family', $family->generatePublicToken()),
+            route('public.dashboard', $family->generateDashboardPublicToken()),
+        ];
+        foreach (['', '*', 'https://*.example.test', 'https:', "'self'", 'https://ha.example.test/path', 'https://ha.example.test/', 'https://user:password@ha.example.test', 'https://ha.example.test?query=1', 'https://ha.example.test#fragment', 'https://ha.example.test:99999', 'https://ha.example.test; script-src *', 'http://homeassistant.local:8123, *', 'http://homeassistant.local:8123, 0', "https://ha.example.test\r\nX-Test: injected"] as $origins) {
+            config(['security.public_frame_origins' => $origins]);
+            foreach ($urls as $url) {
+                $response = $this->get($url)->assertOk()->assertHeader('X-Frame-Options', 'DENY');
+                $this->assertStringContainsString("frame-ancestors 'none'", $response->headers->get('Content-Security-Policy'));
+            }
+        }
+    }
+
+    public function test_local_embedding_still_enforces_the_origin_allowlist(): void
+    {
+        $this->app['env'] = 'local';
+        config(['security.public_frame_origins' => 'http://homeassistant.local:8123']);
+        $family = $this->familyFor();
+        $this->get(route('public.family', $family->generatePublicToken()))->assertOk()
+            ->assertHeader('Content-Security-Policy', 'frame-ancestors http://homeassistant.local:8123')
+            ->assertHeaderMissing('X-Frame-Options');
+        $this->get('/login')->assertHeader('X-Frame-Options', 'DENY');
+    }
+
     public function test_https_and_hsts_are_enforced_in_production(): void
     {
         $this->app['env'] = 'production';

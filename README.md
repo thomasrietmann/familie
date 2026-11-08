@@ -26,7 +26,7 @@ php artisan family:create-account
 php artisan serve
 ```
 
-Alternativ `npm run dev` während der Frontend-Entwicklung starten. Im lokalen Modus ist die CSP für Vite/HMR ausgesetzt; Tests und Produktion verwenden die restriktive CSP. `npm run build` erzeugt versionierte Assets unter `public/build/`. Dieser Ordner inklusive Manifest wird in Git versioniert und mit `git pull --ff-only` ausgeliefert. Nach Änderungen an Blade, CSS, JavaScript oder Build-Abhängigkeiten `npm run build` ausführen und `public/build/` zusammen mit den Quellen committen. Bei Änderungen an der Pagination kann auch ein Composer-Update einen neuen Build erfordern. Die CI führt `npm run build:check` aus und lehnt abweichende, fehlende oder zusätzliche Build-Dateien ab. Tailwind durchsucht dafür ausschliesslich die angegebenen Views, JavaScript-Dateien und Laravel-Pagination-Views, damit lokale Logs und andere Arbeitsdateien das Ergebnis nicht verändern. Die bisherigen Dateien unter `public/css` und `public/js` und das Tailwind-CDN werden nicht mehr verwendet.
+Alternativ `npm run dev` während der Frontend-Entwicklung starten. Im lokalen Modus ist die Ressourcen-CSP für Vite/HMR ausgesetzt (eine konfigurierte iframe-Allowlist bleibt aktiv); Tests und Produktion verwenden die restriktive CSP. `npm run build` erzeugt versionierte Assets unter `public/build/`. Dieser Ordner inklusive Manifest wird in Git versioniert und mit `git pull --ff-only` ausgeliefert. Nach Änderungen an Blade, CSS, JavaScript oder Build-Abhängigkeiten `npm run build` ausführen und `public/build/` zusammen mit den Quellen committen. Bei Änderungen an der Pagination kann auch ein Composer-Update einen neuen Build erfordern. Die CI führt `npm run build:check` aus und lehnt abweichende, fehlende oder zusätzliche Build-Dateien ab. Tailwind durchsucht dafür ausschliesslich die angegebenen Views, JavaScript-Dateien und Laravel-Pagination-Views, damit lokale Logs und andere Arbeitsdateien das Ergebnis nicht verändern. Die bisherigen Dateien unter `public/css` und `public/js` und das Tailwind-CDN werden nicht mehr verwendet.
 
 `php artisan db:seed` erzeugt ausschliesslich lokale Demo-Daten mit Testpasswörtern. Der Seeder verweigert die Ausführung in Produktion. Demo-Daten enthalten einen beispielhaften Dokumentdatensatz ohne Originaldatei und sind keine Produktionsdaten.
 
@@ -38,6 +38,26 @@ Alternativ `npm run dev` während der Frontend-Entwicklung starten. Im lokalen M
 - Die Elternverwaltung berechtigt bereits vorhandene, noch keiner Familie zugeordnete Accounts. Sie versendet keine E-Mail-Einladungen und legt keine Accounts automatisch an.
 - Öffentliche Links sind widerrufbare Zugriffsschlüssel. Sie zeigen nur freigegebene Termine, keine Notizen, Beschreibungen, Dokumente oder Importdaten. Jeder mit dem Link kann diese Ansicht lesen.
 - Das Änderungsprotokoll enthält Aktion, Zeit, Nutzer-/Datensatz-ID und geänderte Feldnamen. Es speichert keine Inhalte, Passwörter, Tokens, IP-Adressen oder User-Agents.
+
+## Home Assistant: öffentliche Seiten einbetten
+
+Nur die erfolgreichen Antworten von `/public/family/{token}` und `/public/dashboard/{token}` können gezielt für iframe-Einbettung freigegeben werden. In der bestehenden Produktions-`.env` setzen:
+
+```dotenv
+PUBLIC_FRAME_ORIGINS=http://homeassistant.local:8123
+```
+
+Mehrere Origins mit Kommas trennen. Ein Origin besteht aus Schema, Host und gegebenenfalls Port, ohne Pfad oder abschliessenden Slash. Wildcards, CSP-Schlüsselwörter, Zugangsdaten und Query-Parameter sind nicht erlaubt; ein ungültiger Eintrag sperrt die gesamte Liste. Leer bedeutet weiterhin `frame-ancestors 'none'` und `X-Frame-Options: DENY`. Bei Zugriff auf HA über eine andere Adresse muss deren Origin ausdrücklich ergänzt werden. Die Allowlist ersetzt keine Token-Prüfung und macht die Links nicht öffentlich auffindbar.
+
+Deployment dieses Fixes: geänderten Code ausliefern, obigen Wert in die bestehende `.env` ergänzen und `php artisan config:clear` ausführen. Keine Migration, kein neuer APP_KEY und kein Frontend-Build erforderlich. Wegen der unten beschriebenen METANET-Pfadunterschiede keinen Konfigurationscache über SSH erstellen. Falls PHP OPcache Änderungen nicht automatisch erkennt, den PHP-Prozess über das Hosting neu laden.
+
+Die Freigaberouten liefern dann `frame-ancestors http://homeassistant.local:8123` innerhalb der ansonsten unveränderten CSP und keinen `X-Frame-Options`-Header. Andere Routen sowie Fehler bleiben gesperrt. Auch im lokalen Vite-Modus gilt für freigegebene Seiten die `frame-ancestors`-Allowlist.
+
+**Proxy-Prüfung und Abnahme:** `public/.htaccess` ergänzt keine dieser Header; eine produktive nginx-/Plesk-/CDN-Konfiguration ist nicht im Repository enthalten. Dort zusätzliche `add_header Content-Security-Policy`, `add_header X-Frame-Options` bzw. Apache `Header set/always set` prüfen. Für die beiden Freigaberouten muss die von Laravel erzeugte CSP unverändert durchgereicht werden, ohne zusätzliches `DENY`, `SAMEORIGIN` oder eine zweite CSP mit `frame-ancestors 'none'`. Mehrere CSP-Header gelten gleichzeitig; ein weiterer Header kann die Freigabe wieder blockieren. Den Schutz anderer Routen beim Anpassen des Proxys erhalten.
+
+Nach Deployment in den Browser-Entwicklertools beide Freigabeseiten prüfen: HTTP 200, genau die erwartete CSP, kein X-Frame-Options; anschliessend beide HA-Karten unter dem erlaubten Origin testen. Als Negativprobe dieselben Testfreigaben von einem nicht erlaubten Origin einbetten: der Browser muss sie blockieren. `/login` und eine unbekannte Route müssen weiterhin `frame-ancestors 'none'` und `X-Frame-Options: DENY` liefern. Für Tests nur eigens erzeugte Testfreigaben verwenden; reale Token-URLs oder Kalenderdaten nicht in Logs, Screenshots oder Tickets übernehmen. Header-Tests prüfen die Serverpolicy; die Browserabnahme prüft zusätzlich deren Durchsetzung und die produktive Proxy-Kette.
+
+Der HA-URL-Zusatz `?k={{ (now().timestamp() / 300) | int }}` wird in der Standard-iframe-Karte nicht ausgewertet und kann dort entfernt werden. Er behebt die Header-Blockade nicht; der Fix benötigt ihn nicht.
 
 ## Dokumente und KI
 
